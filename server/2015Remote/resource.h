@@ -689,12 +689,15 @@
 // Linux Terminal (WebView2 + xterm.js)
 #define IDD_DIALOG_TERMINAL             331
 
+// Privacy Screen
+#define ID_PARAM_PRIVACY_WALLPAPER      33025
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        332
-#define _APS_NEXT_COMMAND_VALUE         33025
+#define _APS_NEXT_COMMAND_VALUE         33026
 #define _APS_NEXT_CONTROL_VALUE         2245
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

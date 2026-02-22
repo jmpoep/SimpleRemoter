@@ -67,7 +67,7 @@ bool IsWindows8orHigher()
     return false;
 }
 
-CScreenManager::CScreenManager(IOCPClient* ClientObject, int n, void* user):CManager(ClientObject)
+CScreenManager::CScreenManager(IOCPClient* ClientObject, int n, void* user, BOOL priv):CManager(ClientObject)
 {
 #ifndef PLUGIN
     extern ClientApp g_MyApp;
@@ -104,7 +104,7 @@ CScreenManager::CScreenManager(IOCPClient* ClientObject, int n, void* user):CMan
     m_ScreenSettings.ScreenStrategy = cfg.GetInt("settings", "ScreenStrategy", 0);
     m_ScreenSettings.ScreenWidth = cfg.GetInt("settings", "ScreenWidth", 0);
     m_ScreenSettings.ScreenHeight = cfg.GetInt("settings", "ScreenHeight", 0);
-    m_ScreenSettings.FullScreen = cfg.GetInt("settings", "FullScreen", 0);
+    m_ScreenSettings.FullScreen = cfg.GetInt("settings", "FullScreen", priv);
     m_ScreenSettings.RemoteCursor = cfg.GetInt("settings", "RemoteCursor", 0);
     m_ScreenSettings.ScrollDetectInterval = cfg.GetInt("settings", "ScrollDetectInterval", 2);  // 默认每2帧
     m_ScreenSettings.QualityLevel = cfg.GetInt("settings", "QualityLevel", QUALITY_ADAPTIVE);  // 默认自适应

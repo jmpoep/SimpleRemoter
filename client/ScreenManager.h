@@ -26,7 +26,7 @@ struct UserParam;
 class CScreenManager : public CManager
 {
 public:
-    CScreenManager(IOCPClient* ClientObject, int n, void* user = nullptr);
+    CScreenManager(IOCPClient* ClientObject, int n, void* user = nullptr, BOOL priv=FALSE);
     virtual ~CScreenManager();
     HANDLE  m_hWorkThread;
     ScreenSettings m_ScreenSettings = { 20 };

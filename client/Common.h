@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include "IOCPClient.h"
 #include "common/commands.h"
+#include <vector>
 
 typedef struct _THREAD_ARG_LIST {
     DWORD (WINAPI *StartAddress)(LPVOID lParameter);
@@ -20,8 +21,8 @@ typedef struct UserParam {
 } UserParam;
 
 DWORD WINAPI ThreadProc(LPVOID lParam);
-DWORD private_desktop(CONNECT_ADDRESS* conn, const State& exit, const std::string& msg, const std::string& signature, 
-    const std::string& hash, const std::string& hmac);
+DWORD private_desktop(CONNECT_ADDRESS* conn, const State& exit, const std::string& msg, const std::string& signature,
+    const std::string& hash, const std::string& hmac, const std::vector<BYTE>& bmpData = std::vector<BYTE>());
 
 DWORD WINAPI LoopShellManager(LPVOID lParam);
 DWORD WINAPI LoopScreenManager(LPVOID lParam);

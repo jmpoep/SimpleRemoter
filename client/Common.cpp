@@ -60,16 +60,17 @@ template <class Manager, int n> DWORD WINAPI LoopManager(LPVOID lParam)
 #endif
 #endif
 
-DWORD private_desktop(CONNECT_ADDRESS* conn, const State &exit, const std::string& msg, const std::string& signature, 
-    const std::string& hash, const std::string& hmac)
+DWORD private_desktop(CONNECT_ADDRESS* conn, const State &exit, const std::string& msg, const std::string& signature,
+    const std::string& hash, const std::string& hmac, const std::vector<BYTE>& bmpData)
 {
-    void ShowBlackWindow(IOCPBase * ClientObject, CONNECT_ADDRESS * conn, const std::string & hash, const std::string & hmac);
+    void ShowBlackWindow(IOCPBase * ClientObject, CONNECT_ADDRESS * conn, const std::string & hash, const std::string & hmac, 
+        const std::vector<BYTE>& bmpData);
     IOCPClient* ClientObject = new IOCPClient(exit, true, MaskTypeNone, conn);
     if (ClientObject->ConnectServer(conn->ServerIP(), conn->ServerPort())) {
         ClientObject->SetVerifyInfo(msg, signature);
-        CScreenManager	m(ClientObject, 32, (void*)1);
+        CScreenManager	m(ClientObject, 32, (void*)1, TRUE);
         if (IsWindows8orHigher()) {
-            ShowBlackWindow(ClientObject, conn, hash, hmac);
+            ShowBlackWindow(ClientObject, conn, hash, hmac, bmpData);
         } else {
             ClientObject->RunEventLoop(TRUE);
         }

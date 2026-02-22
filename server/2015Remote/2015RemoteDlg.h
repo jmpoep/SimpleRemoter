@@ -301,6 +301,7 @@ public:
     afx_msg void OnToolRcedit();
     afx_msg void OnOnlineUninstall();
     afx_msg void OnOnlinePrivateScreen();
+    CString m_PrivateScreenWallpaper;  // 隐私屏幕壁纸路径
     CTabCtrl m_GroupTab;
     afx_msg void OnSelchangeGroupTab(NMHDR* pNMHDR, LRESULT* pResult);
     afx_msg void OnObfsShellcode();
@@ -324,6 +325,7 @@ public:
     afx_msg void OnOnlineInjNotepad();
     afx_msg void OnParamLoginNotify();
     afx_msg void OnParamEnableLog();
+    afx_msg void OnParamPrivacyWallpaper();
     void ProxyClientTcpPort(bool isStandard);
     afx_msg void OnProxyPort();
     afx_msg void OnHookWin();

