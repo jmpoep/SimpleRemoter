@@ -15,9 +15,24 @@
 #include <io.h>
 #include <direct.h>
 #include <DbgHelp.h>
+#include <intrin.h>  // for __cpuid, __cpuidex
 #include "IOCPUDPServer.h"
 #include "ServerServiceWrapper.h"
 #pragma comment(lib, "Dbghelp.lib")
+
+// Check if CPU supports AVX2 instruction set
+static BOOL IsAVX2Supported()
+{
+    int cpuInfo[4] = { 0 };
+    __cpuid(cpuInfo, 0);
+    int nIds = cpuInfo[0];
+
+    if (nIds >= 7) {
+        __cpuidex(cpuInfo, 7, 0);
+        return (cpuInfo[1] & (1 << 5)) != 0;  // EBX bit 5 = AVX2
+    }
+    return FALSE;
+}
 
 BOOL ServerPair::StartServer(pfnNotifyProc NotifyProc, pfnOfflineProc OffProc, USHORT uPort)
 {
@@ -384,6 +399,14 @@ BOOL CMy2015RemoteApp::ProcessZstaCmd()
 
 BOOL CMy2015RemoteApp::InitInstance()
 {
+    // Check if CPU supports AVX2 instruction set
+    if (!IsAVX2Supported()) {
+        ::MessageBoxA(NULL,
+            "此程序需要支持 AVX2 指令集的 CPU（2013年后的处理器）。您的 CPU 不支持 AVX2，程序无法运行。",
+            "CPU 不兼容", MB_ICONERROR);
+        return FALSE;
+    }
+
     if (!ProcessZstaCmd()) {
         Mprintf("[InitInstance] 处理自定义压缩/解压命令后退出。\n");
         return FALSE;
