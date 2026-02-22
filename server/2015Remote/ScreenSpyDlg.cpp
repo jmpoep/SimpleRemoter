@@ -2195,6 +2195,20 @@ void CScreenSpyDlg::OnMouseLeave()
 void CScreenSpyDlg::OnKillFocus(CWnd* pNewWnd)
 {
     __super::OnKillFocus(pNewWnd);
+
+    // 清理远程修饰键状态，防止 Alt/Ctrl/Shift 卡住
+    // 场景：用户按住 Alt 后切换窗口，KEYUP 不会发送到远程，导致修饰键卡住
+    if (m_bIsCtrl && m_ContextObject) {
+        static const WORD modifierKeys[] = { VK_MENU, VK_CONTROL, VK_SHIFT, VK_LWIN, VK_RWIN };
+        for (WORD vk : modifierKeys) {
+            MYMSG msg;
+            memset(&msg, 0, sizeof(msg));
+            msg.message = WM_KEYUP;
+            msg.wParam = vk;
+            msg.lParam = (MapVirtualKey(vk, MAPVK_VK_TO_VSC) << 16) | 0xC0000001; // 扫描码 + 释放标志
+            SendCommand(&msg);
+        }
+    }
 }
 
 
