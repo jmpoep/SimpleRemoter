@@ -451,6 +451,9 @@
 #define IDC_BTN_BLOCK_INPUT             2308
 #define IDC_BTN_QUALITY                 2309
 #define IDC_BTN_RESTORE_CONSOLE         2310
+#define IDC_BTN_X                       2312
+#define IDC_BTN_Y                       2313
+#define IDC_BTN_Z                       2314
 #define IDC_CHECK1                      2222
 #define IDC_CHECK_FILESERVER            2222
 #define IDC_STATIC_DOWNLOAD             2223

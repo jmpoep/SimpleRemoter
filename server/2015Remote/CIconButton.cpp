@@ -509,3 +509,43 @@ void CIconButton::DrawIconInfoHide(CDC* pDC, const CRect& rc)
 
     pDC->SelectObject(pOld);
 }
+
+// Helper function to draw a letter icon (similar to DrawIconRestoreConsole)
+static void DrawLetterIcon(CDC* pDC, const CRect& rc, LPCTSTR letter)
+{
+    CFont font;
+    font.CreateFont(
+        rc.Height() + 2,  // height
+        0, 0, 0,          // width, escapement, orientation
+        FW_BOLD,          // weight
+        FALSE, FALSE, FALSE,  // italic, underline, strikeout
+        DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+        DEFAULT_PITCH | FF_SWISS,
+        _T("Arial Black")
+    );
+
+    CFont* pOldFont = pDC->SelectObject(&font);
+    pDC->SetTextColor(CLR_ICON);
+    pDC->SetBkMode(TRANSPARENT);
+    pDC->DrawText(letter, -1, (LPRECT)&rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    pDC->SelectObject(pOldFont);
+}
+
+// Letter X icon
+void CIconButton::DrawIconLetterX(CDC* pDC, const CRect& rc)
+{
+    DrawLetterIcon(pDC, rc, _T("X"));
+}
+
+// Letter Y icon
+void CIconButton::DrawIconLetterY(CDC* pDC, const CRect& rc)
+{
+    DrawLetterIcon(pDC, rc, _T("Y"));
+}
+
+// Letter Z icon
+void CIconButton::DrawIconLetterZ(CDC* pDC, const CRect& rc)
+{
+    DrawLetterIcon(pDC, rc, _T("Z"));
+}

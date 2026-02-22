@@ -920,6 +920,11 @@ VOID CScreenManager::OnReceive(PBYTE szBuffer, ULONG ulLength)
         }
         break;
     }
+    case CMD_SWITCH_WINDOW: {
+        // 切换窗口（类似 Alt+Tab）
+        SwitchToNextWindow();
+        break;
+    }
     case COMMAND_NEXT: {
         m_DlgID = ulLength >= 9 ? *((uint64_t*)(szBuffer + 1)) : 0;
         // 解析服务端能力标志（如果有）
@@ -1692,6 +1697,81 @@ VOID CScreenManager::ProcessCommand(LPBYTE szBuffer, ULONG ulLength)
         }
         }
     }
+}
+
+// 枚举窗口回调函数，收集任务栏上的窗口
+static BOOL CALLBACK EnumWindowsForSwitch(HWND hWnd, LPARAM lParam)
+{
+    std::vector<HWND>* pWindows = (std::vector<HWND>*)lParam;
+
+    // 检查窗口是否可见
+    if (!IsWindowVisible(hWnd))
+        return TRUE;
+
+    // 检查窗口是否有任务栏按钮（排除工具窗口、子窗口等）
+    LONG exStyle = GetWindowLongA(hWnd, GWL_EXSTYLE);
+    if (exStyle & WS_EX_TOOLWINDOW)
+        return TRUE;
+
+    // 获取窗口标题，排除无标题窗口
+    char title[256] = {};
+    GetWindowTextA(hWnd, title, sizeof(title));
+    if (strlen(title) == 0)
+        return TRUE;
+
+    // 排除不可见的窗口所有者
+    HWND hOwner = GetWindow(hWnd, GW_OWNER);
+    if (hOwner && !IsWindowVisible(hOwner))
+        return TRUE;
+
+    // 排除最小化且被隐藏的窗口
+    if (IsIconic(hWnd) && !(exStyle & WS_EX_APPWINDOW))
+        return TRUE;
+
+    // 检查是否为应用窗口（有 WS_EX_APPWINDOW 或无 owner）
+    if (!(exStyle & WS_EX_APPWINDOW) && hOwner)
+        return TRUE;
+
+    pWindows->push_back(hWnd);
+    return TRUE;
+}
+
+void CScreenManager::SwitchToNextWindow()
+{
+    // 收集所有任务栏窗口
+    std::vector<HWND> windows;
+
+    if (m_virtual && g_hDesk) {
+        // 虚拟桌面模式：枚举虚拟桌面上的窗口
+        SetThreadDesktop(g_hDesk);
+        EnumDesktopWindows(g_hDesk, EnumWindowsForSwitch, (LPARAM)&windows);
+    } else {
+        // 普通模式：枚举所有窗口
+        EnumWindows(EnumWindowsForSwitch, (LPARAM)&windows);
+    }
+
+    if (windows.empty()) {
+        Mprintf("SwitchToNextWindow: 没有可切换的窗口\n");
+        return;
+    }
+
+    // 循环切换到下一个窗口
+    m_nSwitchWindowIndex = (m_nSwitchWindowIndex + 1) % windows.size();
+    HWND hTarget = windows[m_nSwitchWindowIndex];
+
+    char title[256] = {};
+    GetWindowTextA(hTarget, title, sizeof(title));
+    Mprintf("SwitchToNextWindow: 切换到窗口 %d/%d: %s [%p]\n",
+            m_nSwitchWindowIndex + 1, (int)windows.size(), title, hTarget);
+
+    // 如果窗口被最小化，先恢复
+    if (IsIconic(hTarget)) {
+        ShowWindow(hTarget, SW_RESTORE);
+    }
+
+    // 将窗口置于最前面
+    SetForegroundWindow(hTarget);
+    BringWindowToTop(hTarget);
 }
 
 void CScreenManager::LoadQualityProfiles()

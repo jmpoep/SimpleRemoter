@@ -225,6 +225,7 @@ enum {
     CMD_TERMINAL_RESIZE = 81,       // 终端尺寸调整: [cmd:1][cols:2][rows:2]
     CMD_RESTORE_CONSOLE = 82,       // RDP会话归位（恢复控制台会话）
     CMD_RESET_VIRTUAL_DESKTOP = 83, // 重置虚拟桌面（关闭所有窗口重新启动）
+    CMD_SWITCH_WINDOW = 84,         // 切换窗口（类似 Alt+Tab）
 
     TOKEN_SCROLL_FRAME = 99,        // 滚动优化帧
     // 服务端发出的标识

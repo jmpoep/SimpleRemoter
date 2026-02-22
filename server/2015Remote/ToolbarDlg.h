@@ -35,6 +35,9 @@ public:
     CIconButton m_btnStatusInfo;
     CIconButton m_btnQuality;
     CIconButton m_btnRestoreConsole;
+    CIconButton m_btnX;           // 切换窗口按钮
+    CIconButton m_btnY;           // 预留按钮 Y
+    CIconButton m_btnZ;           // 预留按钮 Z
     CIconButton m_btnScreenshot;
     CIconButton m_btnMinimize;
     CIconButton m_btnClose;
@@ -73,6 +76,9 @@ public:
     afx_msg void OnBnClickedStatusInfo();
     afx_msg void OnBnClickedQuality();
     afx_msg void OnBnClickedRestoreConsole();
+    afx_msg void OnBnClickedX();          // 切换窗口响应函数
+    afx_msg void OnBnClickedY();          // 预留按钮 Y 响应函数
+    afx_msg void OnBnClickedZ();          // 预留按钮 Z 响应函数
     afx_msg void OnBnClickedScreenshot();
     afx_msg BOOL OnEraseBkgnd(CDC* pDC);
     virtual BOOL OnInitDialog();

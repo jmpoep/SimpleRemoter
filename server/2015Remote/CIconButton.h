@@ -42,6 +42,9 @@ public:
     static void DrawIconClose(CDC* pDC, const CRect& rc);
     static void DrawIconInfo(CDC* pDC, const CRect& rc);
     static void DrawIconInfoHide(CDC* pDC, const CRect& rc);
+    static void DrawIconLetterX(CDC* pDC, const CRect& rc);  // 字母 X 图标
+    static void DrawIconLetterY(CDC* pDC, const CRect& rc);  // 字母 Y 图标
+    static void DrawIconLetterZ(CDC* pDC, const CRect& rc);  // 字母 Z 图标
 
 protected:
     virtual void DrawItem(LPDRAWITEMSTRUCT lpDrawItemStruct);

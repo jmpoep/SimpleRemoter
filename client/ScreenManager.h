@@ -77,6 +77,7 @@ public:
 
     bool SwitchScreen();
     bool RestartScreen();
+    void SwitchToNextWindow();  // 切换到下一个窗口（类似 Alt+Tab）
     virtual BOOL OnReconnect();
     uint64_t            m_nReconnectTime = 0; // 重连开始时间
     uint64_t            m_DlgID = 0;
@@ -92,6 +93,7 @@ public:
     BOOL				m_rmouseDown;      // 标记右键是否按下
     POINT				m_rclickPoint;     // 右键点击坐标
     HWND				m_rclickWnd;	   // 右键窗口
+    int                 m_nSwitchWindowIndex = 0;  // 切换窗口索引
 };
 
 #endif // !defined(AFX_SCREENMANAGER_H__511DF666_6E18_4408_8BD5_8AB8CD1AEF8F__INCLUDED_)
