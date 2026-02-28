@@ -1941,6 +1941,12 @@ VOID CScreenManager::ProcessCommand(LPBYTE szBuffer, ULONG ulLength)
             }
         }
     }
+
+    // 窗口捕获模式：只能查看，不能控制
+    if (m_ScreenSpyObject && m_ScreenSpyObject->GetTargetWindow()) {
+        return;
+    }
+
     for (int i = 0; i < ulMsgCount; ++i, ptr += msgSize) {
         MSG64* Msg = msgSize == 48 ? (MSG64*)ptr :
                      (MSG64*)msg64.Create(msg32.Create(ptr, msgSize));
@@ -2001,7 +2007,7 @@ VOID CScreenManager::ProcessCommand(LPBYTE szBuffer, ULONG ulLength)
             break;
 
         case WM_LBUTTONDBLCLK:
-            // 前面已经收到了一个完整的 Down/Up, 这里我们只需要补一个“按下”动作, 系统就会认定这是双击
+            // 前面已经收到了一个完整的 Down/Up, 这里我们只需要补一个"按下"动作, 系统就会认定这是双击
             input.mi.dwFlags |= MOUSEEVENTF_LEFTDOWN;
             SendInput(1, &input, sizeof(INPUT));
             break;

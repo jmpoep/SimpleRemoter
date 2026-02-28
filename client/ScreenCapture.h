@@ -1023,6 +1023,13 @@ public:
         return m_BitmapInfor_Send;
     }
 
+    // 获取目标窗口句柄（窗口捕获模式用）
+    // 基类返回 nullptr，子类（如 CWindowCapture）可重写返回目标窗口
+    virtual HWND GetTargetWindow() const
+    {
+        return nullptr;
+    }
+
 public: // 纯虚接口
 
     // 获取第一帧屏幕

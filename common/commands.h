@@ -77,9 +77,10 @@ typedef struct {
 
 // 屏幕类型（用于 ScreenSettings.ScreenType）
 enum ScreenType {
-    USING_GDI = 0,      // GDI 截屏
-    USING_DXGI = 1,     // DXGI 截屏
-    USING_VIRTUAL = 2,  // 虚拟桌面
+    USING_GDI = 0,            // GDI 截屏
+    USING_DXGI = 1,           // DXGI 截屏
+    USING_VIRTUAL = 2,        // 虚拟桌面
+    USING_WINDOW_CAPTURE = 3, // 窗口捕获 (Graphics Capture API, Win10 1803+)
 };
 
 // 以下2个数字需全局唯一，否则在生成服务时会出问题

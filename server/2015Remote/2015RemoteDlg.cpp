@@ -841,24 +841,20 @@ VOID CMy2015RemoteDlg::AddList(CString strIP, CString strAddr, CString strPCName
             return;
         }
         if (ctx->GetClientID() == id && !ctx->GetClientData(ONLINELIST_IP).IsEmpty()) {
-            LeaveCriticalSection(&m_cs);
             Mprintf("上线消息 - 主机已经存在 [2]: %llu. IP= %s. Path= %s\n", id, data[ONLINELIST_IP], path);
-            return;
+#ifndef _DEBUG
+            LeaveCriticalSection(&m_cs);
+			return; // We may do the multiple client login test in debug mode, so skip this check in debug build
+#endif
         }
     }
 
     if (modify)
         m_ClientMap->SaveToFile(GetDbPath());
     m_HostList.insert(ContextObject);
+    // 加入待处理队列，由定时器批量更新 UI（减少闪烁）
     if (groupName == m_selectedGroup || (groupName.empty() && m_selectedGroup == "default")) {
-        int i = m_CList_Online.InsertItem(m_CList_Online.GetItemCount(), data[ONLINELIST_IP]);
-        for (int n = ONLINELIST_ADDR; n <= ONLINELIST_CLIENTTYPE; n++) {
-            auto note = m_ClientMap->GetClientMapData(ContextObject->GetClientID(), MAP_NOTE);
-            n == ONLINELIST_COMPUTER_NAME ?
-            m_CList_Online.SetItemText(i, n, !note.IsEmpty() ? note : data[n]) :
-                          m_CList_Online.SetItemText(i, n, data[n].IsEmpty() ? "?" : data[n]);
-        }
-        m_CList_Online.SetItemData(i, (DWORD_PTR)ContextObject);
+        m_PendingOnline.push_back(ContextObject);
     }
     std::string tip = flag ? " (" + v[RES_CLIENT_PUBIP] + ") " : "";
     ShowMessage(_TR("操作成功"), strIP + tip.c_str() + " " + _L(_T("主机上线")) + "[" + loc + "][" + groupName.c_str() + "]");
@@ -1671,20 +1667,71 @@ void CMy2015RemoteDlg::OnTimer(UINT_PTR nIDEvent)
     }
     if (nIDEvent == TIMER_REFRESH_LIST) {
         CLock L(m_cs);
-        if (!m_DirtyClients.empty()) {
+        bool hasListChange = !m_PendingOnline.empty() || !m_PendingOffline.empty();
+
+        // 有上下线事件时，禁用重绘以减少闪烁
+        if (hasListChange) {
             m_CList_Online.SetRedraw(FALSE);
+        }
+
+        // 处理下线事件（先删除，避免索引变化影响）
+        if (!m_PendingOffline.empty()) {
+            for (int port : m_PendingOffline) {
+                CString portStr;
+                portStr.FormatL("%d", port);
+                int n = m_CList_Online.GetItemCount();
+                for (int i = 0; i < n; ++i) {
+                    CString cur = m_CList_Online.GetItemText(i, ONLINELIST_ADDR);
+                    if (cur == portStr) {
+                        m_CList_Online.DeleteItem(i);
+                        // m_HostList 已在 OnUserOfflineMsg 中移除，此处无需重复
+                        break;
+                    }
+                }
+            }
+            m_PendingOffline.clear();
+        }
+
+        // 处理上线事件
+        if (!m_PendingOnline.empty()) {
+            for (context* ctx : m_PendingOnline) {
+                // 检查是否仍在 m_HostList 中（可能已被移除）
+                if (m_HostList.find(ctx) == m_HostList.end()) {
+                    continue;
+                }
+                int i = m_CList_Online.InsertItem(m_CList_Online.GetItemCount(), ctx->GetClientData(ONLINELIST_IP));
+                for (int n = ONLINELIST_ADDR; n <= ONLINELIST_CLIENTTYPE; n++) {
+                    auto data = ctx->GetClientData(n);
+                    auto note = m_ClientMap->GetClientMapData(ctx->GetClientID(), MAP_NOTE);
+                    n == ONLINELIST_COMPUTER_NAME ?
+                    m_CList_Online.SetItemText(i, n, !note.IsEmpty() ? note : data) :
+                    m_CList_Online.SetItemText(i, n, data.IsEmpty() ? "?" : data);
+                }
+                m_CList_Online.SetItemData(i, (DWORD_PTR)ctx);
+            }
+            m_PendingOnline.clear();
+        }
+
+        // 恢复重绘
+        if (hasListChange) {
+            m_CList_Online.SetRedraw(TRUE);
+            m_CList_Online.Invalidate();
+        }
+
+        // 处理心跳更新（不需要 SetRedraw，SetItemText 会局部重绘）
+        if (!m_DirtyClients.empty()) {
+            int n = m_CList_Online.GetItemCount();
             for (uint64_t id : m_DirtyClients) {
-                for (int i = 0, n = m_CList_Online.GetItemCount(); i < n; ++i) {
+                for (int i = 0; i < n; ++i) {
                     context* ctx = (context*)m_CList_Online.GetItemData(i);
                     if (id == ctx->GetClientID()) {
                         m_CList_Online.SetItemText(i, ONLINELIST_LOGINTIME, ctx->GetClientData(ONLINELIST_LOGINTIME));
                         m_CList_Online.SetItemText(i, ONLINELIST_PING, ctx->GetClientData(ONLINELIST_PING));
                         m_CList_Online.SetItemText(i, ONLINELIST_VIDEO, ctx->GetClientData(ONLINELIST_VIDEO));
+                        break;
                     }
                 }
             }
-            m_CList_Online.SetRedraw(TRUE);
-            m_CList_Online.Invalidate(FALSE);
             m_DirtyClients.clear();
         }
     }
@@ -1708,6 +1755,11 @@ void CMy2015RemoteDlg::CheckHeartbeat()
             PostMessageA(WM_SHOWMESSAGE, (WPARAM)new CharMsg(_TR("[主机下线] 主机长时间无心跳: ") + host), NULL);
             Mprintf("主机 %s[%llu]心跳超时\n", host, ContextObject->GetClientID());
             it = m_HostList.erase(it);
+            // 从待上线队列中移除（防止定时器访问已释放的 context）
+            auto pit = std::find(m_PendingOnline.begin(), m_PendingOnline.end(), ContextObject);
+            if (pit != m_PendingOnline.end()) {
+                m_PendingOnline.erase(pit);
+            }
             ContextObject->CancelIO();
             for (int i = 0, n = m_CList_Online.GetItemCount(); i < n; i++) {
                 auto lParam = m_CList_Online.GetItemData(i);
@@ -3364,24 +3416,18 @@ LRESULT CMy2015RemoteDlg::OnUserToOnlineList(WPARAM wParam, LPARAM lParam)
 LRESULT CMy2015RemoteDlg::OnUserOfflineMsg(WPARAM wParam, LPARAM lParam)
 {
     auto host = FindHost((int)lParam);
-    if (host) {
-        CLock L(m_cs);
-        m_HostList.erase(host);
-    }
 
-    CString port;
-    port.FormatL("%d", lParam);
+    // 加入待处理队列，由定时器批量更新 UI（减少闪烁）
     EnterCriticalSection(&m_cs);
-    int n = m_CList_Online.GetItemCount();
-    for (int i = 0; i < n; ++i) {
-        CString cur = m_CList_Online.GetItemText(i, ONLINELIST_ADDR);
-        if (cur == port) {
-            auto ctx = (context*)m_CList_Online.GetItemData(i);
-            m_CList_Online.DeleteItem(i);
-            m_HostList.erase(ctx);
-            break;
+    if (host) {
+        m_HostList.erase(host);
+        // 从待上线队列中移除（防止访问已释放的 context）
+        auto it = std::find(m_PendingOnline.begin(), m_PendingOnline.end(), host);
+        if (it != m_PendingOnline.end()) {
+            m_PendingOnline.erase(it);
         }
     }
+    m_PendingOffline.push_back((int)lParam);
     if (host) {
         CString ip = host->GetClientData(ONLINELIST_IP);
         auto tm = host->GetAliveTime();

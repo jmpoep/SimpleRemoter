@@ -1,8 +1,6 @@
-﻿# 🌐 语言 | Language
+# SimpleRemoter
 
-**[🇨🇳 中文](./ReadMe.md) | [🇺🇸 English](./ReadMe_EN.md)**
-
----
+**[简体中文](./ReadMe.md) | [繁體中文](./ReadMe_TW.md) | [English](./ReadMe_EN.md)**
 
 <p align="center">
   <a href="https://github.com/yuanyuanxiang/SimpleRemoter/stargazers">
@@ -14,342 +12,469 @@
   <a href="https://github.com/yuanyuanxiang/SimpleRemoter/releases">
     <img src="https://img.shields.io/github/v/release/yuanyuanxiang/SimpleRemoter?style=flat-square" alt="GitHub Release">
   </a>
-  <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square&logo=windows" alt="Platform">
-  <img src="https://img.shields.io/badge/language-C%2B%2B-orange?style=flat-square&logo=cplusplus" alt="Language">
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue?style=flat-square" alt="Platform">
+  <img src="https://img.shields.io/badge/language-C%2B%2B17-orange?style=flat-square&logo=cplusplus" alt="Language">
   <img src="https://img.shields.io/badge/IDE-VS2019%2B-purple?style=flat-square&logo=visualstudio" alt="IDE">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License">
+</p>
+
+<p align="center">
+  <a href="https://github.com/yuanyuanxiang/SimpleRemoter/releases/latest">
+    <img src="https://img.shields.io/badge/Download-最新版本-2ea44f?style=for-the-badge&logo=github" alt="Download Latest">
+  </a>
 </p>
 
 ---
 
-# 📚 导航目录
-
-- [1. 项目简介](#1-project-overview)
-- [2. 免责声明](#2-legal-disclaimer)
-- [3. 系统架构](#3-system-architecture)
-  - [3.1 主控程序](#31-master-controller)
-  - [3.2 受控程序](#32-controlled-client)
-- [4. 部署方式](#4-deployment-methods)
-  - [4.1 内网部署](#41-intranet-deployment)
-  - [4.2 外网部署](#42-internet-deployment)
-- [5. 更新日志](#5-changelog)
-- [6. 其他项目](#6-other-projects)
-- [7. 沟通反馈](#7-feedback-and-contact)
+> [!WARNING]
+> **重要法律声明**
+>
+> 本软件**仅供教育目的及授权使用场景**，包括：
+> - 在您的组织内进行远程 IT 管理
+> - 经授权的渗透测试和安全研究
+> - 个人设备管理和技术学习
+>
+> **未经授权访问计算机系统属违法行为。** 使用者须对遵守所有适用法律承担全部责任。开发者对任何滥用行为概不负责。
 
 ---
 
-# 1. 项目简介 <a id="1-project-overview"></a>
+## 目录
 
-**原始来源：** [zibility](https://github.com/zibility/Remote)
+- [项目简介](#项目简介)
+- [免责声明](#免责声明)
+- [功能特性](#功能特性)
+- [技术亮点](#技术亮点)
+- [系统架构](#系统架构)
+- [快速开始](#快速开始)
+- [客户端支持](#客户端支持)
+- [更新日志](#更新日志)
+- [相关项目](#相关项目)
+- [联系方式](#联系方式)
 
-**功能概述：** 基于 Gh0st 的远程控制器，提供以下核心功能：
-- 终端管理、进程管理、窗口管理
-- 桌面管理、文件管理、语音管理、视频管理
-- 服务管理、注册表管理、键盘记录
-- SOCKS 代理、虚拟桌面、远程代码执行
+---
 
-如果您对远程控制技术感兴趣并喜欢本项目，欢迎为本项目添加 Star。同时，Fork、Watch、提交 Issues 或发起 Pull Request 均受欢迎。作者将在业余时间对所提问题进行修复与维护。
+## 项目简介
+
+**SimpleRemoter** 是一个功能完整的远程控制解决方案，基于经典的 Gh0st 框架重构，采用现代 C++17 开发。项目始于 2019 年，经过持续迭代已发展为支持 **Windows + Linux** 双平台的企业级远程管理工具。
+
+### 核心能力
+
+| 类别 | 功能 |
+|------|------|
+| **远程桌面** | 实时屏幕控制、多显示器支持、H.264 编码、自适应质量 |
+| **文件管理** | 双向传输、断点续传、C2C 传输、SHA-256 校验 |
+| **终端管理** | 交互式 Shell、ConPTY/PTY 支持、现代 Web 终端 |
+| **系统管理** | 进程/服务/窗口管理、注册表浏览、会话控制 |
+| **媒体采集** | 摄像头监控、音频监听、键盘记录 |
+| **网络功能** | SOCKS 代理、FRP 穿透、端口映射 |
+
+### 适用场景
+
+- **企业 IT 运维**：批量管理内网设备，远程故障排查
+- **远程办公**：安全访问办公电脑，文件同步传输
+- **安全研究**：渗透测试、红队演练、安全审计
+- **技术学习**：网络编程、IOCP 模型、加密传输实践
+
+**原始来源：** [zibility/Remote](https://github.com/zibility/Remote) | **起始日期：** 2019.1.1
 
 [![Star History Chart](https://api.star-history.com/svg?repos=yuanyuanxiang/SimpleRemoter&type=Date)](https://star-history.com/#yuanyuanxiang/SimpleRemoter&Date)
 
-<span style="color:#FF5722; font-weight:bold;">*本程序仅限于学习和技术交流用途，使用者需对自身使用该软件所产生的一切后果承担责任。*</span>
+---
 
-**项目用途：** 本项目适用于远程办公、远程设备管理、远程协助等合法合规场景。
+## 免责声明
 
-**起始日期：** 2019.1.1
+**请在使用本软件前仔细阅读以下声明：**
 
-**编译方法：** 请用**git clone**本项目代码，直接下载为zip文件，代码格式默认是UNIX风格，将会出现奇怪的编译问题。
-本项目采用 VS2019 进行开发和维护，同时兼容 VS2022/VS2026 等较新版本的编译器，详见：[#171](https://github.com/yuanyuanxiang/SimpleRemoter/issues/171)。
+1. **合法用途**：本项目仅供合法的技术研究、学习交流和授权的远程管理使用。严禁将本软件用于未经授权访问他人计算机系统、窃取数据、监控他人隐私等任何违法行为。
 
-使用新版编译器时可能遇到依赖库冲突问题，解决方案请参考：[#269](https://github.com/yuanyuanxiang/SimpleRemoter/issues/269)。
+2. **使用者责任**：使用者必须遵守所在国家/地区的法律法规。因使用本软件而产生的任何法律责任，由使用者自行承担。
 
-主控程序在非中文系统上可能出现乱码，解决方法请参阅：[#157](https://github.com/yuanyuanxiang/SimpleRemoter/issues/157)。
+3. **无担保声明**：本软件按"现状"提供，不附带任何明示或暗示的担保，包括但不限于适销性、特定用途适用性的担保。
 
-**代码风格：**
+4. **免责条款**：开发者不对因使用、误用或无法使用本软件而造成的任何直接、间接、偶然、特殊或后果性损害承担责任。
 
-```cmd
-for /R %F in (*.cpp *.h *.c) do astyle --style=linux "%F"
-```
+5. **版权声明**：本项目采用 MIT 协议开源，允许自由使用、修改和分发，但必须保留原始版权声明。
 
-# 2. 免责声明 <a id="2-legal-disclaimer"></a>
+**继续使用本软件即表示您已阅读、理解并同意上述所有条款。**
 
-本项目为远程控制技术的研究性实现，仅供合法学习用途。**严禁**用于非法侵入、控制、监听他人设备等违法行为。
+---
 
-本软件按"现状"提供，不附带任何明示或暗示的保证。使用本软件的风险由用户自行承担。开发者不对任何因使用本软件而引发的非法或恶意用途承担责任。用户应遵守所在地区的法律法规，并以负责任的方式使用本软件。开发者对因使用本软件所产生的任何直接或间接损害不承担责任。
+## 功能特性
 
-# 3. 系统架构 <a id="3-system-architecture"></a>
+### 远程桌面
 
-![Architecture](https://github.com/yuanyuanxiang/SimpleRemoter/wiki/res/Architecture.jpg)
+![远程桌面](./images/Remote.jpg)
 
-本程序（自 v1.1.1 起）采用两层架构设计：
+- **多种截图方式**：GDI（兼容性强）、DXGI（高性能）、虚拟桌面（后台运行）
+- **智能压缩算法**：
+  - DIFF 差分算法 - SSE2 优化，仅传输变化区域
+  - RGB565 算法 - 节省 50% 带宽
+  - H.264 编码 - 视频级压缩，适合高帧率场景
+  - 灰度模式 - 极低带宽消耗
+- **自适应质量**：根据网络 RTT 自动调整帧率（5-30 FPS）、分辨率和压缩算法
+- **多显示器**：支持多屏切换和多屏上墙显示
+- **隐私屏幕**：被控端屏幕可隐藏，支持锁屏状态下控制
+- **文件拖拽**：Ctrl+C/V 跨设备复制粘贴文件
 
-1. 超级用户负责分发并管理各主控程序
-2. 各主控程序分别控制其下属的受控计算机
-
-该架构具有以下特点：
-
-- **层级控制**：借助下层主控程序作为跳板，超级用户可对整个系统中的任意计算机进行控制
-- **隔离机制**：不同主控程序（Master 1、2、3 等）所管理的计算机相互隔离，主控程序仅能控制由其自身生成的客户端
-- **集中授权**：由超级用户统一管理各主控程序的授权
-
-**郑重提示：严禁用于非法控制他人设备。**
-
-## 3.1 主控程序 <a id="31-master-controller"></a>
-
-主控程序为 **YAMA.exe**，作为 Server 端，基于 IOCP 通信模型，支持上万主机同时在线。得益于分层控制架构，系统支持的主机数量可提升一个数量级。例如，一个超级用户管理 10 个 Master，每个 Master 控制 1 万台主机，则超级用户可控制的主机总数达到 10 万台。
-
-以下展示主控程序的运行界面，所有功能均可正常使用，程序运行稳定。部分功能要求受控程序以管理员权限运行。
-
-![主界面](./images/Yama.jpg)
-
-主界面以列表形式展示已连接到本机的受控程序。选中某一主机后，可进行远程控制操作，如修改备注、代理映射、执行代码等。
-
-![终端管理](./images/Console.jpg)
-
-**终端管理**：打开命令行窗口，执行远程命令。另有一个[极简版本](./linux/main.cpp)，已支持 Linux 客户端，供 Linux 开发者研究使用。
-
-![进程管理](./images/Process.jpg)
-
-**进程管理**：显示受控机器上正在运行的进程，可对普通进程进行启停操作或代码注入（无法操作高权限进程）。
-
-![窗口管理](./images/Window.jpg)
-
-**窗口管理**：显示受控机器上已打开的窗口或程序，支持最大化、最小化、隐藏或显示窗口等操作。
-
-![桌面管理](./images/Remote.jpg)
-![桌面管理](./images/RemoteSet.jpg)
-
-**桌面管理**：即"远程桌面"功能，用于控制远程机器。可通过菜单设置远程桌面参数：
-- **屏幕截图方式**：支持 GDI、DXGI 或 VIRTUAL（虚拟桌面）
-- **图像压缩方式**：支持灰度图像传输、屏幕差异算法和 H.264 压缩
-
-其中 VIRTUAL（虚拟桌面）模式可在被控计算机后台运行远程桌面程序，已针对操作流畅度进行优化。此外，支持上报活动窗口和检测指定软件。屏幕传输经 SSE2 和多线程深度优化，跨网情况下可达 30 FPS。远程桌面控制支持多显示器和多屏上墙，支持隐私屏幕。若客户端以 Windows 服务方式运行，则支持在锁屏状态下进行远程控制并输入密码解锁。支持使用 Ctrl+C 和 Ctrl+V 在主控与被控之间传输文件。
+### 文件管理
 
 ![文件管理](./images/FileManage.jpg)
 
-**文件管理**：在本机与受控机器之间传输文件。
+- **V2 传输协议**：全新设计，支持大文件（>4GB）
+- **断点续传**：网络中断后自动恢复，状态持久化
+- **C2C 传输**：客户端之间直接传输，无需经过主控
+- **完整性校验**：SHA-256 哈希验证，确保文件完整
+- **批量操作**：支持文件搜索、压缩、批量传输
 
-![语音管理](./images/Voice.jpg)
+### 终端管理
 
-**语音管理**：监听受控机器的声音，也可向受控计算机发送语音（需受控机器配备音频设备）。
+![终端管理](./images/Console.jpg)
 
-![视频管理](./images/Video.jpg)
+- **交互式 Shell**：完整的命令行体验，支持 Tab 补全
+- **ConPTY 技术**：Windows 10+ 原生伪终端支持
+- **现代 Web 终端**：基于 WebView2 + xterm.js（v1.2.7+）
+- **终端尺寸调整**：自适应窗口大小
 
-**视频管理**：打开受控机器的摄像头。设置中默认勾选检测摄像头选项，主机列表将显示摄像头状态。
+### 进程与窗口管理
 
-![服务管理](./images/Service.jpg)
+| 进程管理 | 窗口管理 |
+|---------|---------|
+| ![进程](./images/Process.jpg) | ![窗口](./images/Window.jpg) |
 
-**服务管理**：查看受控机器上的服务列表，在权限允许的情况下可对服务进行启动、停止等操作。
+- **进程管理**：查看进程列表、CPU/内存占用、启动/终止进程
+- **代码注入**：向目标进程注入 DLL（需管理员权限）
+- **窗口控制**：最大化/最小化/隐藏/关闭窗口
 
-![注册表管理](./images/Register.jpg)
+### 媒体功能
 
-**注册表管理**：查看受控机器上的注册表（仅支持查看，不支持修改）。
+| 视频管理 | 语音管理 |
+|---------|---------|
+| ![视频](./images/Video.jpg) | ![语音](./images/Voice.jpg) |
 
-**其他功能**
+- **摄像头监控**：实时视频流，支持分辨率调整
+- **音频监听**：远程声音采集，支持双向语音
+- **键盘记录**：在线/离线记录模式
 
-- **机器管理**：对被控主机执行注销、关机或重启操作
-- **客户管理**：转移或分享客户端，支持设置有效期，到期后自动恢复
-- **客户代理**：开启代理映射，借助客户端进行 SOCKS 代理；或利用 FRP 代理客户端的指定端口（如 3389），即可使用 mstsc.exe 工具进行远程桌面控制
-- **执行程序**：客户端从远程下载 EXE 程序执行，或从主控端上传 EXE 程序到客户端执行
-- **执行代码**：编写符合规范的 DLL，即可将该 DLL 传输到客户端执行，具有极高的灵活性。客户端会缓存此 DLL，避免每次执行代码时重复传输
+### 其他功能
 
-**关于授权：**
+- **服务管理**：查看和控制 Windows 服务
+- **注册表浏览**：只读方式浏览注册表内容
+- **会话控制**：远程注销/关机/重启
+- **SOCKS 代理**：通过客户端建立代理隧道
+- **FRP 穿透**：内置 FRP 支持，轻松穿透内网
+- **代码执行**：远程执行 DLL，支持热更新
 
-自 v1.0.8 起，操作主控程序需要获得授权。新编译的程序享有 14 天试用期，过期后生成服务端需凭借"序列号"申请口令。如需屏蔽该授权逻辑，请参考 `OnOnlineBuildClient` 函数并重新编译程序，详见：[#91](https://github.com/yuanyuanxiang/SimpleRemoter/issues/91)。"口令"包含授权日期范围，确保一机一码；授权逻辑会检测计算机日期是否被篡改。生成口令需使用密码。
+---
 
-![AuthDlg](./images/AuthDlg.jpg)
+## 技术亮点
 
-![PasswordGen](./images/PasswordGen.jpg)
-
-自 v1.1.1 起，撤销对新编译程序的授权。任何人使用本程序均需自行编译，否则程序将在运行 10 分钟后弹出对话框，要求输入口令。授权机制的引入可将缺乏编程经验的用户阻挡在外。若仅想体验此远程控制程序，建议使用 v1.0.7 及更早版本，其核心功能与后续版本无本质差异。若您对技术有兴趣，相信您有足够能力自行编译程序。
-
-自 v1.2.0 起，主控程序必须取得授权，否则功能将受限。授权方式支持按计算机绑定或按域名绑定。尝试绕过授权可能导致主控程序无法正常工作。已取得授权的主控程序将自动断开与授权服务器的连接。若授权未成功，则继续保持与授权服务器的连接并进行必要的数据交互——这一机制可能被定义为"后门"，但这是必需的，且无法被绕过。
-
-自 v1.2.4 起，提供一个试用期为 2年，并发连接个数为20的主控程序口令，供用户体验。该主控程序仅限内网使用，且只能使用“TestRun-磁盘DLL”、“ghost.exe”、“ghost-Windows服务”、“ServerDll.dll”客户端生成方式。老版本主控程序使用该口令也许能成功授权。
+### 高性能网络架构
 
 ```
-授权方式：按计算机IP绑定
-主控IP：127.0.0.1
+┌─────────────────────────────────────────────────────────┐
+│                    IOCP 通信模型                          │
+├─────────────────────────────────────────────────────────┤
+│  • I/O 完成端口：Windows 最高效的异步 I/O 模型            │
+│  • 单主控支持 10,000+ 并发连接                            │
+│  • 支持 TCP / UDP / KCP 三种传输协议                      │
+│  • 自动分块处理大数据包（最大 128KB 发送缓冲）             │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 自适应质量控制
+
+基于 RTT（Round-Trip Time）的智能质量调整系统：
+
+| RTT 延迟 | 质量等级 | 帧率 | 分辨率 | 压缩算法 | 适用场景 |
+|---------|---------|------|--------|---------|---------|
+| < 30ms | Ultra | 25 FPS | 原始 | DIFF | 局域网办公 |
+| 30-80ms | High | 20 FPS | 原始 | RGB565 | 一般办公 |
+| 80-150ms | Good | 20 FPS | ≤1080p | H.264 | 跨网/视频 |
+| 150-250ms | Medium | 15 FPS | ≤900p | H.264 | 跨网办公 |
+| 250-400ms | Low | 12 FPS | ≤720p | H.264 | 较差网络 |
+| > 400ms | Minimal | 8 FPS | ≤540p | H.264 | 极差网络 |
+
+- **零额外开销**：复用心跳包计算 RTT
+- **快速降级**：2 次检测即触发，响应网络波动
+- **谨慎升级**：5 次稳定后才提升质量
+- **冷却机制**：防止频繁切换
+
+### V2 文件传输协议
+
+```cpp
+// 77 字节协议头 + 文件名 + 数据载荷
+struct FileChunkPacketV2 {
+    uint8_t   cmd;            // COMMAND_SEND_FILE_V2 = 85
+    uint64_t  transferID;     // 传输会话 ID
+    uint64_t  srcClientID;    // 源客户端 ID (0=主控端)
+    uint64_t  dstClientID;    // 目标客户端 ID (0=主控端, C2C)
+    uint32_t  fileIndex;      // 文件编号 (0-based)
+    uint32_t  totalFiles;     // 总文件数
+    uint64_t  fileSize;       // 文件大小（支持 >4GB）
+    uint64_t  offset;         // 当前块偏移
+    uint64_t  dataLength;     // 本块数据长度
+    uint64_t  nameLength;     // 文件名长度
+    uint16_t  flags;          // 标志位 (FFV2_LAST_CHUNK 等)
+    uint16_t  checksum;       // CRC16 校验（可选）
+    uint8_t   reserved[8];    // 预留扩展
+    // char filename[nameLength];  // UTF-8 相对路径
+    // uint8_t data[dataLength];   // 文件数据
+};
+```
+
+**特性**：
+- 大文件支持（uint64_t 突破 4GB 限制）
+- 断点续传（状态持久化到 `%TEMP%\FileTransfer\`）
+- SHA-256 完整性校验
+- C2C 直传（客户端到客户端）
+- V1/V2 协议兼容
+
+### 屏幕传输优化
+
+- **SSE2 指令集**：像素差分计算硬件加速
+- **多线程并行**：线程池分块处理屏幕数据
+- **滚动检测**：识别滚动场景，减少 50-80% 带宽
+- **H.264 编码**：基于 x264，GOP 控制，视频级压缩
+
+### 安全机制
+
+| 层级 | 措施 |
+|------|------|
+| **传输加密** | AES-256 数据加密，可配置 IV |
+| **身份验证** | 签名验证 + HMAC 认证 |
+| **授权控制** | 序列号绑定（IP/域名），多级授权 |
+| **文件校验** | SHA-256 完整性验证 |
+| **会话隔离** | Session 0 独立处理 |
+
+### 依赖库
+
+| 库 | 版本 | 用途 |
+|----|------|------|
+| zlib | 1.3.1 | 通用压缩 |
+| zstd | 1.5.7 | 高速压缩 |
+| x264 | 0.164 | H.264 编码 |
+| libyuv | 190 | YUV 转换 |
+| HPSocket | 6.0.3 | 网络 I/O |
+| jsoncpp | 1.9.6 | JSON 解析 |
+
+---
+
+## 系统架构
+
+![架构图](https://github.com/yuanyuanxiang/SimpleRemoter/wiki/res/Architecture.jpg)
+
+### 两层控制架构（v1.1.1+）
+
+```
+超级用户
+    │
+    ├── Master 1 ──> 客户端群组 A（最多 10,000+）
+    ├── Master 2 ──> 客户端群组 B
+    └── Master 3 ──> 客户端群组 C
+```
+
+**设计优势**：
+- **层级控制**：超级用户可管理任意主控程序
+- **隔离机制**：不同主控管理的客户端相互隔离
+- **水平扩展**：10 个 Master × 10,000 客户端 = 100,000 设备
+
+### 主控程序（Server）
+
+主控程序 **YAMA.exe** 提供图形化管理界面：
+
+![主界面](./images/Yama.jpg)
+
+- 基于 IOCP 的高性能服务端
+- 客户端分组管理
+- 实时状态监控（RTT、地理位置、活动窗口）
+- 一键生成客户端
+
+### 受控程序（Client）
+
+![客户端生成](./images/TestRun.jpg)
+
+**运行形式**：
+
+| 类型 | 说明 |
+|------|------|
+| `ghost.exe` | 独立可执行文件，无外部依赖 |
+| `TestRun.exe` + `ServerDll.dll` | 分离加载，支持内存加载 DLL |
+| Windows 服务 | 后台运行，支持锁屏控制 |
+| Linux 客户端 | 跨平台支持（v1.2.5+） |
+
+---
+
+## 快速开始
+
+### 5 分钟快速体验
+
+无需编译，下载即用：
+
+1. **下载发布版** - 从 [Releases](https://github.com/yuanyuanxiang/SimpleRemoter/releases/latest) 下载最新版本
+2. **启动主控** - 运行 `YAMA.exe`，输入授权信息（见下方试用口令）
+3. **生成客户端** - 点击工具栏「生成」按钮，配置服务器 IP 和端口
+4. **部署客户端** - 将生成的客户端复制到目标机器并运行
+5. **开始控制** - 客户端上线后，双击即可打开远程桌面
+
+> [!TIP]
+> 首次测试建议在同一台机器上运行主控和客户端，使用 `127.0.0.1` 作为服务器地址。
+
+### 编译要求
+
+- **操作系统**：Windows 10/11 或 Windows Server 2016+
+- **开发环境**：Visual Studio 2019 / 2022 / 2026
+- **SDK**：Windows 10 SDK (10.0.19041.0+)
+
+### 编译步骤
+
+```bash
+# 1. 克隆代码（必须使用 git clone，不要下载 zip）
+git clone https://github.com/yuanyuanxiang/SimpleRemoter.git
+
+# 2. 打开解决方案
+#    使用 VS2019+ 打开 SimpleRemoter.sln
+
+# 3. 选择配置
+#    Release | x86 或 Release | x64
+
+# 4. 编译
+#    生成 -> 生成解决方案
+```
+
+**常见问题**：
+- 依赖库冲突：[#269](https://github.com/yuanyuanxiang/SimpleRemoter/issues/269)
+- 非中文系统乱码：[#157](https://github.com/yuanyuanxiang/SimpleRemoter/issues/157)
+- 编译器兼容性：[#171](https://github.com/yuanyuanxiang/SimpleRemoter/issues/171)
+
+### 部署方式
+
+#### 内网部署
+
+主控与客户端在同一局域网，客户端直连主控 IP:Port。
+
+#### 外网部署（FRP 穿透）
+
+```
+客户端 ──> VPS (FRP Server) ──> 本地主控 (FRP Client)
+```
+
+详细配置请参考：[反向代理部署说明](./反向代理.md)
+
+### 授权说明
+
+自 v1.2.4 起提供试用口令（2 年有效期，20 并发连接，仅限内网）：
+
+```
+授权方式：按计算机 IP 绑定
+主控 IP：127.0.0.1
 序列号：12ca-17b4-9af2-2894
 密码：20260201-20280201-0020-be94-120d-20f9-919a
 验证码：6015188620429852704
-有效时间：2026-02-01 至 2028-02-01
-
-请设置主控IP为127.0.0.1，然后在输入口令对话框中输入上述序密码和验证码完成授权。
+有效期：2026-02-01 至 2028-02-01
 ```
-
-## 3.2 受控程序 <a id="32-controlled-client"></a>
-
-![主界面](./images/TestRun.jpg)
-
-受控程序为 Client 端，支持两种运行形式：
-
-1. **独立程序形式**：ghost.exe 作为单个程序运行，不依赖其他动态链接库
-2. **分离加载形式**：TestRun.exe + ServerDll.dll，由 EXE 程序调用核心动态链接库
-
-注意：自 [v1.0.8](https://github.com/yuanyuanxiang/SimpleRemoter/releases/tag/v1.0.0.8) 起，`TestRun.exe` 采用内存加载 DLL 的运行方式，向主控程序请求 DLL 并在内存中执行，有利于代码热更新。
 
 ---
 
-# 4. 部署方式 <a id="4-deployment-methods"></a>
+## 客户端支持
 
-## 4.1 内网部署 <a id="41-intranet-deployment"></a>
+### Windows 客户端
 
-内网部署是指主控程序与受控设备位于同一局域网内，受控设备能够直接连接主控的地址。这种部署方式非常简单，在生成服务端时填写主控的 IP 和端口即可。
+**系统要求**：Windows 7 SP1 及以上
 
-## 4.2 外网部署 <a id="42-internet-deployment"></a>
+**功能完整性**：✅ 全部功能支持
 
-外网部署是指主控程序与受控程序位于不同网络，主控设备没有公网 IP，受控设备无法直接连接主控地址。此时需要一个"中间人"将主控设备的内网 IP 穿透出去。一种方式是[使用花生壳](./使用花生壳.txt)，此处不再赘述。若需进行跨境/跨国远程控制，强烈建议使用 VPS 而非花生壳。
+### Linux 客户端（v1.2.5+）
 
-本文介绍第二种方法，其原理与使用花生壳类似：
+**系统要求**：
+- 显示服务器：X11/Xorg（暂不支持 Wayland）
+- 必需库：libX11
+- 推荐库：libXtst（XTest 扩展）、libXss（空闲检测）
 
+**功能支持**：
+
+| 功能 | 状态 | 实现 |
+|------|------|------|
+| 远程桌面 | ✅ | X11 屏幕捕获，鼠标/键盘控制 |
+| 远程终端 | ✅ | PTY 交互式 Shell |
+| 文件管理 | ✅ | 双向传输，大文件支持 |
+| 进程管理 | ✅ | 进程列表、终止进程 |
+| 心跳/RTT | ✅ | RFC 6298 RTT 估算 |
+| 守护进程 | ✅ | 双 fork 守护化 |
+| 剪贴板 | ⏳ | 开发中 |
+| 会话管理 | ⏳ | 开发中 |
+
+**编译方式**：
+
+```bash
+cd linux
+cmake .
+make
 ```
-受控 ──> VPS ──> 主控
-```
-
-使用 VPS（Virtual Private Server，虚拟专用服务器）作为"中间人"，实现对远程设备的控制。当然也可使用物理服务器，但 VPS 更具性价比。通常您需要购买 VPS 服务。VPS 与程序之间的通信基于 [FRP](https://github.com/fatedier/frp)。
-
-在这种部署模式下，生成服务端程序时 IP 填写 VPS 的 IP（部分 VPS 供应商提供域名，也可填写域名）。通常在 VPS 上运行 FRP 服务端程序，在本地运行 FRP 客户端程序。当主机连接 VPS 时，VPS 会将请求转发到本地计算机；同样，控制请求也将经由 VPS 中转到受控主机。
-
-有关跨网、跨境或跨国远程控制系统的部署方式，详见：[反向代理部署说明](./反向代理.md)，这是作者实践所采用的方式。
-
-# 5. 更新日志 <a id="5-changelog"></a>
-
-更早的变更记录参看：[history](./history.md)
-
-**发布 v1.2.6（2026.2.16）：**
-
-本版本重点优化远程桌面工具栏体验，增强授权管理功能，并修复多项稳定性问题。
-
-- 功能：添加状态窗口显示远程连接信息（RTT、帧率、分辨率等）
-- 功能：实现授权保存和管理逻辑及 UI
-- 功能：添加菜单启用/禁用 StretchBltMode `HALFTONE` 图像缩放模式
-- 改进：使用 H.264 时减少网络带宽
-- 改进：全屏工具栏重写，使用图标按钮替代文本按钮
-- 改进：工具栏支持 4 个位置（顶部/底部/左侧/右侧）并支持多显示器
-- 改进：新增切换屏幕、阻止输入、质量等工具栏按钮
-- 改进：屏幕截图保存时显示屏幕通知横幅
-- 改进：关闭远程桌面时自动触发重连
-- 改进：调整质量等级定义并添加禁用选项
-- 修复：注册表树重新选择时重复子项的问题
-- 修复：Linux 客户端竞态条件导致崩溃
-- 修复：屏幕缩放时远程控制坐标不正确
-- 修复：CShellDlg::OnCtlColor 中的 GDI 画刷泄漏
-
-**发布 v1.2.5（2026.2.11）：**
-
-本版本重点优化远程桌面跨网体验，新增 Linux 客户端支持，并增强文件管理功能。
-
-- 功能：基于 RTT 的自适应质量控制，根据网络延迟自动调整帧率、分辨率和压缩算法
-- 功能：新增 RGB565 屏幕算法，带宽节省 50%
-- 功能：滚动检测优化，滚动场景带宽减少 50-80%
-- 功能：远程桌面标题栏显示实时 FPS 和传输速率
-- 功能：文件管理器支持本地和远程文件搜索
-- 功能：支持 ip2region IP 数据库
-- 功能：Linux 客户端支持远程桌面查看
-- 功能：Linux 客户端支持进程和文件管理
-- 功能：添加 Linux 客户端构建选项
-- 改进：完善心跳消息并上报活动窗口
-- 改进：签名登录消息用于客户端验证
-- 改进：重新分组后自动更新主机列表
-- 修复：小键盘数字键被识别为方向键的问题
-- 修复：Linux 客户端构建失败的问题
-
-**发布 v1.2.4（2026.2.1）：**
-
-本版本扩展了 PE 编辑功能，新增多语言支持和纯真 IP 数据库，增强客户端列表体验，并修复多项稳定性问题。
-
-- 新功能：将 `Replace Icon` 扩展为 `PE Edit`，使用 "rcedit" 实现
-- 新功能：支持纯真 (QQWRY) IP 数据库
-- 新功能：添加使用标准 FRP 代理客户端端口的菜单
-- 新功能：添加多语言支持（Beta，尚未完成）
-- 新功能：新增 CListCtrlEx 支持列的显示/隐藏
-- 改进：使用隐私远程桌面时隐藏远程光标
-- 改进：增强 CClientListDlg 分组功能和用户体验
-- 改进：远程桌面控制可能失败时通知用户
-- 修复：向已断开的客户端发送文件时主控崩溃的问题
-- 修复：将 _TR/_L 结果赋值给 LPCTSTR 时的悬空指针问题
-- 修复：Windows INI 文件读取 API 存在 32KB 限制的问题
-- 修复：#294 需要转换 `IPConverter` 的结果编码
-- 修复：#293 IOCPServer 设置了错误的 keep-alive 时间
-- 修复：#292 RTT 显示 0 或 1 而非实际毫秒值
-- 修复：鼠标双击无法选中目标文本的问题
-- 修复：更改屏幕分辨率策略导致 DXGI 崩溃
-- 修复：密码绑定域名时的主控授权问题
-
-**发布 v1.2.3（2026.1.21）：**
-
-本版本主要增强远程桌面控制体验，优化客户端更新逻辑，并修复多项稳定性问题。
-
-- 新功能：支持从 http(s) 服务器下载 payload
-- 新功能：重构 ClientList 并添加对话框显示
-- 新功能：支持在屏幕控制中使用远程光标
-- 改进：使用 FRP 代理 payload 下载请求
-- 改进：`GetForegroundSelectedFiles` 后执行 `ExpandDirectories`
-- 改进：更改某些对话框的 zstd 压缩选项
-- 改进：更新 zlib 到 `1.3.1.2` 版本并在解压缩中使用上下文
-- 改进：为 Windows Server 使用旧的 shellcode+AES 加载器构建客户端
-- 改进：添加远程桌面工具栏的更多功能/按钮
-- 改进：改进远程控制 `ScreenSpyDlg` 重连逻辑
-- 改进：显示系统对话框中所有窗口状态
-- 改进：为 EXE 类型客户端添加更新逻辑
-- 修复：`GetPort` 导致不显示主机离线日志的问题
-- 修复：commit 2fb77d5 导致的 OnOnlineUpdate 问题
-- 修复：`GetProcessList` 无法获取某些进程完整路径的问题
-- 修复：时间检查以使重新分配的客户端立即恢复
-- 修复：#288 命令行问题
-- 修复：安装时复制 payload 文件到目标目录的问题
-- 修复：#281 检查 CPU 是否支持 SSE2 以避免客户端崩溃
-- 修复：远程桌面窗口恢复大小问题
-
-**发布 v1.2.2（2026.1.11）：**
-
-本版本主要增强远程桌面设置持久化、文件管理功能，并改进授权和键盘转发。
-
-- 改进：将远程桌面屏幕设置保存到注册表
-- 修复：日期超出范围时授权返回失败
-- 改进：当 `GetClipboardFiles` 失败时使用 `GetForegroundSelectedFiles`
-- 新功能：在弹出窗口中显示屏幕分辨率和客户端 ID
-- 新功能：支持自定义客户端名称和安装目录
-- 新功能：添加设置远程控制屏幕策略的菜单
-- 改进：显示文件传输进度对话框
-- 新功能：文件管理对话框支持压缩文件
-- 改进：添加 F10、WM_SYSKEYDOWN、WM_SYSKEYUP 的转发
-
-**发布 v1.2.1（2026.1.1）：**
-
-本版本主要增强远程桌面功能（新增 FPS 控制、屏幕切换、文件拖拽支持），改进 Windows 服务运行模式，并修复多个稳定性问题。
-
-- 改进客户端构建：将 shellcode 追加到文件末尾
-- 修复：`TestRun` 以 Windows 服务运行时无法解锁屏幕
-- 新功能：为远程桌面添加 FPS 控制菜单
-- 修复：`AddList` 中的存在性检查包含客户端 IP 检查
-- 回退 #242 并改进向客户端发送文件时的安全性
-- 修复切换屏幕并支持拖拽文件到远程
-- 修复 #266：CloseHandle 关闭无效句柄
-- 改进：添加更多系统热键转发
-- 新功能：添加控制主控端是否以服务运行的菜单
-- 改进 `ToolbarDlg` 滑入/滑出性能
-
-
 
 ---
 
-# 6. 其他项目 <a id="6-other-projects"></a>
+## 更新日志
 
-- [HoldingHands](https://github.com/yuanyuanxiang/HoldingHands)：全英文界面的远程控制程序，采用不同的架构设计
-- [BGW RAT](https://github.com/yuanyuanxiang/BGW_RAT)：功能全面的远程控制程序（大灰狼 9.5）
-- [Gh0st](https://github.com/yuanyuanxiang/Gh0st)：另一款基于 Gh0st 的远程控制程序
+### v1.2.7 (2026.2.28)
+
+**V2 文件传输协议**
+
+- 支持 C2C（客户端到客户端）直接传输
+- 断点续传和大文件支持（>4GB）
+- SHA-256 文件完整性校验
+- WebView2 + xterm.js 现代终端
+- Linux 文件管理支持
+- 主机列表批量更新优化，减少 UI 闪烁
+
+### v1.2.6 (2026.2.16)
+
+**远程桌面工具栏重写**
+
+- 状态窗口显示 RTT、帧率、分辨率
+- 全屏工具栏支持 4 个位置和多显示器
+- H.264 带宽优化
+- 授权管理 UI 完善
+
+### v1.2.5 (2026.2.11)
+
+**自适应质量控制 & Linux 客户端**
+
+- 基于 RTT 的智能质量调整
+- RGB565 算法（节省 50% 带宽）
+- 滚动检测优化（节省 50-80% 带宽）
+- Linux 客户端初版发布
+
+完整更新历史请查看：[history.md](./history.md)
 
 ---
 
-# 7. 沟通反馈 <a id="7-feedback-and-contact"></a>
+## 相关项目
 
-**作者QQ：** 请通过 962914132 联系
+- [HoldingHands](https://github.com/yuanyuanxiang/HoldingHands) - 全英文界面远程控制
+- [BGW RAT](https://github.com/yuanyuanxiang/BGW_RAT) - 大灰狼 9.5
+- [Gh0st](https://github.com/yuanyuanxiang/Gh0st) - 经典 Gh0st 实现
 
-**联系方式：** [Telegram](https://t.me/doge_grandfather) | [Email](mailto:yuanyuanxiang163@gmail.com) | [LinkedIn](https://www.linkedin.com/in/wishyuanqi)
+---
 
-**问题报告：** [Issues](https://github.com/yuanyuanxiang/SimpleRemoter/issues)
+## 联系方式
 
-**欢迎提交：** [Pull Requests](https://github.com/yuanyuanxiang/SimpleRemoter/pulls)
+| 渠道 | 链接 |
+|------|------|
+| **QQ** | 962914132 |
+| **Telegram** | [@doge_grandfather](https://t.me/doge_grandfather) |
+| **Email** | [yuanyuanxiang163@gmail.com](mailto:yuanyuanxiang163@gmail.com) |
+| **LinkedIn** | [wishyuanqi](https://www.linkedin.com/in/wishyuanqi) |
+| **Issues** | [问题反馈](https://github.com/yuanyuanxiang/SimpleRemoter/issues) |
+| **PR** | [贡献代码](https://github.com/yuanyuanxiang/SimpleRemoter/pulls) |
 
-**赞助方式 / Sponsor：** 本项目源于技术学习与兴趣爱好，作者将根据业余时间不定期更新。**如果本项目对您有所帮助，欢迎通过赞助图标支持本项目。** 若希望通过其他方式（如微信、支付宝、PayPal）进行赞助，请点击[这里](https://github.com/yuanyuanxiang/yuanyuanxiang/blob/main/images/QR_Codes.jpg)。
+### 赞助支持
+
+本项目源于技术学习与兴趣爱好，作者将根据业余时间不定期更新。如果本项目对您有所帮助，欢迎赞助支持：
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-Support%20This%20Project-ff69b4?style=for-the-badge)](https://github.com/yuanyuanxiang/yuanyuanxiang/blob/main/images/QR_Codes.jpg)
+
+---
+
+<p align="center">
+  <sub>如果您喜欢这个项目，请给它一个 ⭐ Star！</sub>
+</p>

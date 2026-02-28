@@ -65,7 +65,7 @@ BOOL CTerminalDlg::OnInitDialog()
     if (!m_hTerminal) {
         CString errMsg;
         if (!IsTerminalModuleLoaded()) {
-            errMsg = _T("TerminalModule.dll not found!\n\nPlease copy TerminalModule_x86.dll to the application directory.");
+            errMsg = _T("Please copy TerminalModule_x86.dll/TerminalModule_x64.dll to the application directory.");
         } else {
             errMsg = _T("CreateEmbeddedTerminal failed.\n\nPlease ensure Microsoft Edge WebView2 Runtime is installed.");
         }

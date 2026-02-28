@@ -193,8 +193,11 @@ public:
     VOID SendAllCommand(PBYTE  szBuffer, ULONG ulLength);
     // 显示用户上线信息
     CWnd* m_pFloatingTip = nullptr;
-    // 记录 clientID
+    // 记录 clientID（心跳更新）
     std::set<uint64_t> m_DirtyClients;
+    // 待处理的上线/下线事件（批量更新减少闪烁）
+    std::vector<context*> m_PendingOnline;
+    std::vector<int> m_PendingOffline;  // 存储端口号
     CListCtrlEx m_CList_Online;
     CListCtrl   m_CList_Message;
     std::set<context*> m_HostList;
