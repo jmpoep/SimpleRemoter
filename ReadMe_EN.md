@@ -441,6 +441,39 @@ make
 
 ## Changelog
 
+### v1.0.2.9 (2026.3.27)
+
+**Network Security & Stability Enhancement**
+
+**New Features:**
+- Network configuration dialog: IP whitelist/blacklist management, takes effect immediately
+- Configurable rate limiting: DLL request limiting, adjustable IP ban thresholds
+- IP history dialog: View license IP login history
+- Status bar displays MTBF/runtime and license expiration date
+- Agent crash protection: Auto-switch to normal mode after 3 crashes within 5 minutes
+- Client search function: Ctrl+F to quickly search IP, location, computer name
+- Auto-ban malicious IPs: Auto-ban for 1 hour if >15 connections within 60 seconds
+- Proxy Protocol v2 support: Get real client IP behind FRP proxy
+- Linux clipboard sync and V2 file transfer support
+- Right-click menu to run client program on host
+- Multi-layer authorization obfuscation support
+
+**Bug Fixes:**
+- Fixed race condition crash in OnUserOfflineMsg
+- Fixed FrpcParam lost when client requests FRPC DLL
+- Increased max packet size from 10MB to 50MB
+- Support mstsc remote session for reading user registry
+- Fixed clipboard false trigger when remote desktop minimized
+- Fixed master crash when operating process dialog
+- Status bar host count updates in real-time
+- Reset timeval before each select() call on Linux
+- Passcode format validation to filter garbage data
+
+**Improvements:**
+- Enhanced authorization check with IP ban notifications
+- Support master program running with user privilege
+- Large DLL auto-fallback to TinyRun
+
 ### v1.2.8 (2026.3.11)
 
 **Email Notification & Remote Audio**
