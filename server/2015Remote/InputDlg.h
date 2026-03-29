@@ -16,6 +16,7 @@ public:
     BOOL Init(LPCTSTR caption, LPCTSTR prompt);
 
     void Init2(LPCTSTR name, LPCTSTR defaultValue);
+    void Init3(LPCTSTR name, LPCTSTR defaultValue);  // 第三个输入框
 
 // 对话框数据
 #ifdef AFX_DESIGN_TIME
@@ -39,6 +40,10 @@ public:
     CEdit m_Edit2thInput;
     CString m_sItemName;
     CString m_sSecondInput;
+    CStatic m_Static3rdInput;
+    CEdit m_Edit3rdInput;
+    CString m_sItemName3;
+    CString m_sThirdInput;
     CStatic m_StaticTipInfo;
     CString m_sTipInfo;
 };

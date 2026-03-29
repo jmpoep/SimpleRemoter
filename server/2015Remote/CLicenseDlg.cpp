@@ -41,6 +41,7 @@ BEGIN_MESSAGE_MAP(CLicenseDlg, CDialogEx)
     ON_COMMAND(ID_LICENSE_RENEWAL, &CLicenseDlg::OnLicenseRenewal)
     ON_COMMAND(ID_LICENSE_EDIT_REMARK, &CLicenseDlg::OnLicenseEditRemark)
     ON_COMMAND(ID_LICENSE_VIEW_IPS, &CLicenseDlg::OnLicenseViewIPs)
+    ON_COMMAND(ID_LICENSE_DELETE, &CLicenseDlg::OnLicenseDelete)
 END_MESSAGE_MAP()
 
 // 获取所有授权信息
@@ -91,6 +92,9 @@ std::vector<LicenseInfo> GetAllLicenses()
 
         it = kv.find("PendingHostNum");
         if (it != kv.end()) info.PendingHostNum = atoi(it->second.c_str());
+
+        it = kv.find("PendingQuota");
+        if (it != kv.end()) info.PendingQuota = atoi(it->second.c_str());
 
         licenses.push_back(info);
     }
@@ -195,17 +199,24 @@ void CLicenseDlg::RefreshList()
         }
         m_ListLicense.SetItemText(idx, 3, strPending);
 
-        // 动态计算状态：如果存储的是 Active 但已过期，标记为 Expired 并持久化
+        // 动态计算状态：根据到期时间自动调整 Active/Expired 状态
         std::string displayStatus = lic.Status;
-        if (lic.Status == LICENSE_STATUS_ACTIVE && d.length() == 8) {
+        if (d.length() == 8 && lic.Status != LICENSE_STATUS_REVOKED) {
             CTime now = CTime::GetCurrentTime();
             CString strToday;
             strToday.Format(_T("%04d%02d%02d"), now.GetYear(), now.GetMonth(), now.GetDay());
-            if (d < std::string(CT2A(strToday))) {
+            std::string today = CT2A(strToday);
+
+            if (d < today && lic.Status == LICENSE_STATUS_ACTIVE) {
+                // 已过期，标记为 Expired
                 displayStatus = LICENSE_STATUS_EXPIRED;
-                // 持久化到配置文件
                 SetLicenseStatus(lic.SerialNumber, LICENSE_STATUS_EXPIRED);
                 m_Licenses[indices[i]].Status = LICENSE_STATUS_EXPIRED;
+            } else if (d >= today && lic.Status == LICENSE_STATUS_EXPIRED) {
+                // 未过期（可能设置了预设续期），恢复为 Active
+                displayStatus = LICENSE_STATUS_ACTIVE;
+                SetLicenseStatus(lic.SerialNumber, LICENSE_STATUS_ACTIVE);
+                m_Licenses[indices[i]].Status = LICENSE_STATUS_ACTIVE;
             }
         }
         m_ListLicense.SetItemText(idx, 2, displayStatus.c_str());
@@ -335,6 +346,8 @@ void CLicenseDlg::OnNMRClickLicenseList(NMHDR* pNMHDR, LRESULT* pResult)
     } else {
         menu.AppendMenuL(MF_STRING, ID_LICENSE_ACTIVATE, _T("激活授权(&A)"));
     }
+    menu.AppendMenuL(MF_SEPARATOR, 0, _T(""));
+    menu.AppendMenuL(MF_STRING, ID_LICENSE_DELETE, _T("删除授权(&D)"));
 
     // 显示菜单
     CPoint point;
@@ -425,7 +438,7 @@ int ParseHostNumFromPasscode(const std::string& passcode)
 }
 
 // 设置待续期信息
-bool SetPendingRenewal(const std::string& deviceID, const std::string& expireDate, int hostNum)
+bool SetPendingRenewal(const std::string& deviceID, const std::string& expireDate, int hostNum, int quota)
 {
     std::string iniPath = GetLicensesPath();
     config cfg(iniPath);
@@ -438,6 +451,7 @@ bool SetPendingRenewal(const std::string& deviceID, const std::string& expireDat
 
     cfg.SetStr(deviceID, "PendingExpireDate", expireDate);
     cfg.SetInt(deviceID, "PendingHostNum", hostNum);
+    cfg.SetInt(deviceID, "PendingQuota", quota > 0 ? quota : 1);
     return true;
 }
 
@@ -450,6 +464,7 @@ RenewalInfo GetPendingRenewal(const std::string& deviceID)
 
     info.ExpireDate = cfg.GetStr(deviceID, "PendingExpireDate", "");
     info.HostNum = cfg.GetInt(deviceID, "PendingHostNum", 0);
+    info.Quota = cfg.GetInt(deviceID, "PendingQuota", 1);  // 默认配额为1
     return info;
 }
 
@@ -461,7 +476,30 @@ bool ClearPendingRenewal(const std::string& deviceID)
 
     cfg.SetStr(deviceID, "PendingExpireDate", "");
     cfg.SetInt(deviceID, "PendingHostNum", 0);
+    cfg.SetInt(deviceID, "PendingQuota", 0);
     return true;
+}
+
+// 配额递减，返回是否还有剩余配额
+bool DecrementPendingQuota(const std::string& deviceID)
+{
+    std::string iniPath = GetLicensesPath();
+    config cfg(iniPath);
+
+    int quota = cfg.GetInt(deviceID, "PendingQuota", 1);
+    if (quota <= 0) {
+        return false;  // 无配额
+    }
+
+    quota--;
+    cfg.SetInt(deviceID, "PendingQuota", quota);
+
+    if (quota <= 0) {
+        // 配额用完，清除待续期信息
+        ClearPendingRenewal(deviceID);
+        return false;
+    }
+    return true;  // 还有剩余配额
 }
 
 void CLicenseDlg::OnLicenseRenewal()
@@ -480,6 +518,7 @@ void CLicenseDlg::OnLicenseRenewal()
     std::string currentExpireDate = ParseExpireDateFromPasscode(lic.Passcode);
     int defaultHostNum = lic.PendingHostNum > 0 ? lic.PendingHostNum : ParseHostNumFromPasscode(lic.Passcode);
     if (defaultHostNum <= 0) defaultHostNum = 100;
+    int defaultQuota = lic.PendingQuota > 0 ? lic.PendingQuota : 1;
 
     // 格式化当前过期日期显示
     CString strCurrentExpire;
@@ -492,18 +531,21 @@ void CLicenseDlg::OnLicenseRenewal()
         strCurrentExpire = _TR("当前到期: 未知");
     }
 
-    // 使用输入对话框获取续期信息
+    // 使用输入对话框获取续期信息（三个输入框）
     CInputDialog dlg(this);
     CString strTitle;
     strTitle.FormatL("预设续期 (%s)", strCurrentExpire);
     dlg.Init(strTitle, _L("续期天数:"));
     dlg.Init2(_L("并发连接数:"), std::to_string(defaultHostNum).c_str());
+    dlg.Init3(_L("配额(机器数):"), std::to_string(defaultQuota).c_str());
 
     if (dlg.DoModal() != IDOK)
         return;
 
     int days = atoi(dlg.m_str);
     int hostNum = atoi(dlg.m_sSecondInput);
+    int quota = atoi(dlg.m_sThirdInput);
+    if (quota <= 0) quota = 1;
 
     if (days <= 0 || hostNum <= 0) {
         MessageBoxL("请输入有效的天数和并发连接数!", "错误", MB_ICONWARNING);
@@ -527,9 +569,10 @@ void CLicenseDlg::OnLicenseRenewal()
         newExpireTime.GetYear(), newExpireTime.GetMonth(), newExpireTime.GetDay());
     std::string newExpireDate = CT2A(strNewExpireDate);
 
-    if (SetPendingRenewal(lic.SerialNumber, newExpireDate, hostNum)) {
+    if (SetPendingRenewal(lic.SerialNumber, newExpireDate, hostNum, quota)) {
         m_Licenses[nIndex].PendingExpireDate = newExpireDate;
         m_Licenses[nIndex].PendingHostNum = hostNum;
+        m_Licenses[nIndex].PendingQuota = quota;
 
         // 续期后自动激活（如果之前是 Expired）
         if (lic.Status == LICENSE_STATUS_EXPIRED) {
@@ -547,8 +590,8 @@ void CLicenseDlg::OnLicenseRenewal()
         m_ListLicense.SetItemText(nItem, LIC_COL_EXPIRE, strPending);
 
         CString msg;
-        msg.FormatL("已预设续期至: %s\n并发连接数: %d\n客户端上线时将自动下发新授权",
-            strPending, hostNum);
+        msg.FormatL("已预设续期至: %s\n并发连接数: %d\n配额: %d (支持%d台机器续期)\n客户端上线时将自动下发新授权",
+            strPending, hostNum, quota, quota);
         MessageBox(msg, _TR("预设成功"), MB_ICONINFORMATION);
     }
 }
@@ -593,6 +636,55 @@ void CLicenseDlg::OnLicenseEditRemark()
     if (SetLicenseRemark(lic.SerialNumber, newRemark)) {
         m_Licenses[nIndex].Remark = newRemark;
         m_ListLicense.SetItemText(nItem, LIC_COL_REMARK, newRemark.c_str());
+    }
+}
+
+// 删除授权
+bool DeleteLicense(const std::string& deviceID)
+{
+    std::string iniPath = GetLicensesPath();
+    config cfg(iniPath);
+
+    // 检查授权是否存在
+    std::string existingPasscode = cfg.GetStr(deviceID, "Passcode", "");
+    if (existingPasscode.empty()) {
+        return false;  // 授权不存在
+    }
+
+    // 删除该 section (通过写入 NULL 删除整个 section)
+    BOOL ret = ::WritePrivateProfileStringA(deviceID.c_str(), NULL, NULL, iniPath.c_str());
+    ::WritePrivateProfileStringA(NULL, NULL, NULL, iniPath.c_str());  // 刷新缓存
+    return ret != FALSE;
+}
+
+void CLicenseDlg::OnLicenseDelete()
+{
+    int nItem = m_ListLicense.GetNextItem(-1, LVNI_SELECTED);
+    if (nItem < 0)
+        return;
+
+    size_t nIndex = (size_t)m_ListLicense.GetItemData(nItem);
+    if (nIndex >= m_Licenses.size())
+        return;
+
+    const auto& lic = m_Licenses[nIndex];
+
+    // 确认删除
+    CString msg;
+    msg.FormatL("确定要删除授权 \"%s\" 吗？\n\n此操作不可撤销！", lic.SerialNumber.c_str());
+    if (MessageBox(msg, _TR("确认删除"), MB_ICONWARNING | MB_YESNO | MB_DEFBUTTON2) != IDYES) {
+        return;
+    }
+
+    if (DeleteLicense(lic.SerialNumber)) {
+        // 从列表和内存中删除
+        m_ListLicense.DeleteItem(nItem);
+        m_Licenses.erase(m_Licenses.begin() + nIndex);
+
+        // 刷新列表以更新 ID 编号
+        RefreshList();
+    } else {
+        MessageBoxL("删除授权失败！", "错误", MB_ICONERROR);
     }
 }
 

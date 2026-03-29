@@ -26,13 +26,15 @@ struct LicenseInfo {
     std::string LastActiveTime;
     std::string PendingExpireDate;  // 预设的新过期日期（如 20270221，空表示无预设）
     int PendingHostNum = 0;         // 预设的并发连接数
+    int PendingQuota = 0;           // 预设的配额数量（支持多机器续期）
 };
 
 // 续期信息结构体
 struct RenewalInfo {
     std::string ExpireDate;     // 新的过期日期（如 20270221）
     int HostNum = 0;
-    bool IsValid() const { return !ExpireDate.empty() && HostNum > 0; }
+    int Quota = 1;              // 配额数量，默认为1
+    bool IsValid() const { return !ExpireDate.empty() && HostNum > 0 && Quota > 0; }
 };
 
 class CMy2015RemoteDlg;  // 前向声明
@@ -94,6 +96,7 @@ public:
     afx_msg void OnLicenseRenewal();
     afx_msg void OnLicenseEditRemark();
     afx_msg void OnLicenseViewIPs();
+    afx_msg void OnLicenseDelete();
 };
 
 // 获取所有授权信息
@@ -103,9 +106,10 @@ std::vector<LicenseInfo> GetAllLicenses();
 bool SetLicenseStatus(const std::string& deviceID, const std::string& status);
 
 // 续期管理函数
-bool SetPendingRenewal(const std::string& deviceID, const std::string& expireDate, int hostNum);
+bool SetPendingRenewal(const std::string& deviceID, const std::string& expireDate, int hostNum, int quota = 1);
 RenewalInfo GetPendingRenewal(const std::string& deviceID);
 bool ClearPendingRenewal(const std::string& deviceID);
+bool DecrementPendingQuota(const std::string& deviceID);  // 配额递减，返回是否还有剩余配额
 
 // 从 passcode 解析过期日期（第2段，如 20260221）
 std::string ParseExpireDateFromPasscode(const std::string& passcode);
@@ -115,6 +119,9 @@ int ParseHostNumFromPasscode(const std::string& passcode);
 
 // 设置授权备注
 bool SetLicenseRemark(const std::string& deviceID, const std::string& remark);
+
+// 删除授权
+bool DeleteLicense(const std::string& deviceID);
 
 // IP 列表辅助函数
 int GetIPCountFromList(const std::string& ipListStr);

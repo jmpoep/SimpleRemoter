@@ -4549,11 +4549,11 @@ std::pair<std::string, std::string> CMy2015RemoteDlg::GenerateRenewalInfo(
         newHmac = std::to_string(hmacVal);
     }
 
-    Mprintf("[TOKEN_AUTH] 生成续期: %s, %s -> %s, %d并发数\n",
-            sn.c_str(), currentExpire.c_str(), renewal.ExpireDate.c_str(), renewal.HostNum);
+    Mprintf("[TOKEN_AUTH] 生成续期: %s, %s -> %s, %d并发数, 配额剩余%d\n",
+            sn.c_str(), currentExpire.c_str(), renewal.ExpireDate.c_str(), renewal.HostNum, renewal.Quota - 1);
 
-    // 清除预设续期记录，避免心跳再次触发 CMD_AUTHORIZATION
-    ClearPendingRenewal(sn);
+    // 配额递减，配额用完后自动清除预设续期记录
+    DecrementPendingQuota(sn);
 
     result.first = newPasscode;
     result.second = newHmac;
@@ -4663,10 +4663,10 @@ void CMy2015RemoteDlg::SendPendingRenewal(CONTEXT_OBJECT* ctx, const std::string
     memcpy(bToken + 12, &signature, sizeof(signature));
     ctx->Send2Client(bToken, sizeof(bToken));
 
-    // 立即清除预设续期记录
-    // 注意：必须在这里清除，因为心跳中的 SN 和请求中的 deviceID 可能不同
-    // case CMD_AUTHORIZATION: 中使用的是请求中的 deviceID，无法正确清除
-    ClearPendingRenewal(sn);
+    // 配额递减，配额用完后自动清除预设续期记录
+    // 注意：必须在这里处理，因为心跳中的 SN 和请求中的 deviceID 可能不同
+    bool hasRemainingQuota = DecrementPendingQuota(sn);
+    Mprintf("[HEARTBEAT] 续期下发完成: %s, 剩余配额: %s\n", sn.c_str(), hasRemainingQuota ? "有" : "无");
 
     // 提示续期已下发
     std::string expireFmt = renewal.ExpireDate.substr(0, 4) + "-" +

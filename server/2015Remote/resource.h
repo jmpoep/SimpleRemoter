@@ -404,6 +404,8 @@
 #define IDC_RADIO_MAIN_SCREEN           2187
 #define IDC_EDIT_HOSTNUM                2188
 #define IDC_STATIC_SECOND               2189
+#define IDC_EDIT_THIRD                  2479
+#define IDC_STATIC_THIRD                2480
 #define IDC_EDIT_UDP_OPTION             2190
 #define IDC_RADIO_FRP_OFF               2191
 #define IDC_RADIO_FRP_ON                2192
@@ -859,6 +861,7 @@
 #define ID_MASTER_TRAIL                 33034
 #define ID_PARAM_RUN_AS_USER            33035
 #define ID_MAIN_NETWORK                 33036
+#define ID_LICENSE_DELETE               33037
 #define ID_EXIT_FULLSCREEN              40001
 
 // Next default values for new objects
@@ -866,7 +869,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        337
-#define _APS_NEXT_COMMAND_VALUE         33037
+#define _APS_NEXT_COMMAND_VALUE         33038
 #define _APS_NEXT_CONTROL_VALUE         2423
 #define _APS_NEXT_SYMED_VALUE           105
 #endif
