@@ -11,6 +11,7 @@
     <ClCompile Include="BuildDlg.cpp" />
     <ClCompile Include="Chat.cpp" />
     <ClCompile Include="CPasswordDlg.cpp" />
+    <ClCompile Include="LicenseFile.cpp" />
     <ClCompile Include="CTextDlg.cpp" />
     <ClCompile Include="DecryptDlg.cpp" />
     <ClCompile Include="EditDialog.cpp" />
@@ -90,6 +91,7 @@
     <ClInclude Include="BuildDlg.h" />
     <ClInclude Include="Chat.h" />
     <ClInclude Include="CPasswordDlg.h" />
+    <ClInclude Include="LicenseFile.h" />
     <ClInclude Include="CTextDlg.h" />
     <ClInclude Include="DateVerify.h" />
     <ClInclude Include="DecryptDlg.h" />

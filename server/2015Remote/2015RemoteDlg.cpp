@@ -25,6 +25,7 @@
 #include "KeyBoardDlg.h"
 #include "InputDlg.h"
 #include "CPasswordDlg.h"
+#include "LicenseFile.h"
 #include "pwd_gen.h"
 #include "CrashReport.h"
 #include "common/location.h"
@@ -781,6 +782,7 @@ BEGIN_MESSAGE_MAP(CMy2015RemoteDlg, CDialogEx)
     ON_COMMAND(ID_LOCATION_QQWRY, &CMy2015RemoteDlg::OnLocationQqwry)
     ON_COMMAND(ID_LOCATION_IP2REGION, &CMy2015RemoteDlg::OnLocationIp2region)
     ON_COMMAND(ID_TOOL_LICENSE_MGR, &CMy2015RemoteDlg::OnToolLicenseMgr)
+    ON_COMMAND(ID_TOOL_IMPORT_LICENSE, &CMy2015RemoteDlg::OnToolImportLicense)
     ON_COMMAND(ID_TOOL_V2_PRIVATEKEY, &CMy2015RemoteDlg::OnToolV2PrivateKey)
     ON_COMMAND(ID_MENU_NOTIFY_SETTINGS, &CMy2015RemoteDlg::OnMenuNotifySettings)
         ON_COMMAND(ID_EXECUTE_TESTRUN, &CMy2015RemoteDlg::OnExecuteTestrun)
@@ -7572,6 +7574,66 @@ void CMy2015RemoteDlg::OnToolLicenseMgr()
     m_pLicenseDlg = new CLicenseDlg(this);
     if (m_pLicenseDlg->Create(IDD_DIALOG_LICENSE, GetDesktopWindow())) {
         m_pLicenseDlg->ShowWindow(SW_SHOW);
+    }
+}
+
+void CMy2015RemoteDlg::OnToolImportLicense()
+{
+    // File filter
+    CString filter = _T("YAMA License (*.lic)|*.lic|All Files (*.*)|*.*||");
+    CString dlgTitle = _TR("导入授权文件");
+
+    // Show file open dialog
+    CFileDialog dlg(TRUE, _T("lic"), NULL,
+        OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, filter, this);
+    dlg.m_ofn.lpstrTitle = dlgTitle;
+
+    if (dlg.DoModal() != IDOK)
+        return;
+
+    // Import and validate
+    LicenseFileData data;
+    std::string error;
+    LicenseImportResult result = ImportLicenseFile(std::string(CT2A(dlg.GetPathName().GetString())), data, error);
+
+    if (result != LicenseImportResult::Success) {
+        MessageBox(CString(error.c_str()), _TR("导入失败"), MB_ICONERROR);
+        return;
+    }
+
+    // Parse expiry info from password
+    auto parts = splitString(data.password, '-');
+    std::string startDate = parts.size() > 0 ? parts[0] : "";
+    std::string endDate = parts.size() > 1 ? parts[1] : "";
+    std::string hostNum = parts.size() > 2 ? parts[2] : "";
+
+    // Format date for display (YYYYMMDD -> YYYY-MM-DD)
+    auto formatDate = [](const std::string& d) -> std::string {
+        if (d.length() == 8) {
+            return d.substr(0, 4) + "-" + d.substr(4, 2) + "-" + d.substr(6, 2);
+        }
+        return d;
+    };
+
+    // Show confirmation dialog
+    CString msg;
+    msg.Format(_T("%s\n\n%s: %s\n%s: %s ~ %s\n%s: %s\n%s: %s\n\n%s"),
+               _TR("确定导入以下授权?"),
+               _TR("序列号"), CString(data.sn.c_str()).GetString(),
+               _TR("有效期"), CString(formatDate(startDate).c_str()).GetString(),
+               CString(formatDate(endDate).c_str()).GetString(),
+               _TR("并发数"), CString(hostNum.c_str()).GetString(),
+               _TR("授权类型"), data.IsV2Auth() ? _T("V2 (ECDSA)") : _T("V1 (HMAC)"),
+               _TR("导入后需要重启程序生效"));
+
+    if (MessageBox(msg, _TR("确认导入"), MB_YESNO | MB_ICONQUESTION) != IDYES)
+        return;
+
+    // Apply license
+    if (ApplyLicenseData(data)) {
+        MessageBoxL("授权已导入，请重启程序生效。", "导入成功", MB_ICONINFORMATION);
+    } else {
+        MessageBoxL("授权信息不完整", "导入失败", MB_ICONERROR);
     }
 }
 

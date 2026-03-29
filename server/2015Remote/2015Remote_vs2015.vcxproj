@@ -297,6 +297,7 @@
     <ClInclude Include="CListCtrlEx.h" />
     <ClInclude Include="context.h" />
     <ClInclude Include="CPasswordDlg.h" />
+    <ClInclude Include="LicenseFile.h" />
     <ClInclude Include="CRcEditDlg.h" />
     <ClInclude Include="CTextDlg.h" />
     <ClInclude Include="CUpdateDlg.h" />
@@ -403,6 +404,7 @@
     <ClCompile Include="CLicenseDlg.cpp" />
     <ClCompile Include="CListCtrlEx.cpp" />
     <ClCompile Include="CPasswordDlg.cpp" />
+    <ClCompile Include="LicenseFile.cpp" />
     <ClCompile Include="CRcEditDlg.cpp" />
     <ClCompile Include="CTextDlg.cpp" />
     <ClCompile Include="CUpdateDlg.cpp" />

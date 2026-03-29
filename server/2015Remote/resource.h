@@ -862,6 +862,7 @@
 #define ID_PARAM_RUN_AS_USER            33035
 #define ID_MAIN_NETWORK                 33036
 #define ID_LICENSE_DELETE               33037
+#define ID_TOOL_IMPORT_LICENSE          33038
 #define ID_EXIT_FULLSCREEN              40001
 
 // Next default values for new objects
@@ -869,7 +870,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        337
-#define _APS_NEXT_COMMAND_VALUE         33038
+#define _APS_NEXT_COMMAND_VALUE         33039
 #define _APS_NEXT_CONTROL_VALUE         2423
 #define _APS_NEXT_SYMED_VALUE           105
 #endif

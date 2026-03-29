@@ -427,6 +427,7 @@ public:
     afx_msg void OnLocationQqwry();
     afx_msg void OnLocationIp2region();
     afx_msg void OnToolLicenseMgr();
+    afx_msg void OnToolImportLicense();
     afx_msg void OnToolV2PrivateKey();
     afx_msg void OnMenuNotifySettings();
     afx_msg void OnOnlineLoginNotify();

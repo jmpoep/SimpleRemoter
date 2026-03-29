@@ -9,6 +9,7 @@
 #include "2015Remote.h"
 #include "common/skCrypter.h"
 #include "2015RemoteDlg.h"
+#include "LicenseFile.h"
 #include "generated_hash.h"
 
 // 外部函数声明
@@ -918,7 +919,7 @@ void CPwdGenDlg::OnBnClickedButtonSaveLicense()
     CString remark;
     // 这里可以弹出一个简单的输入对话框获取备注，或者直接保存
 
-    // 保存授权信息
+    // 保存授权信息到数据库
     bool success = SaveLicenseInfo(
         m_sDeviceID.GetString(),
         m_sPassword.GetString(),
@@ -927,7 +928,44 @@ void CPwdGenDlg::OnBnClickedButtonSaveLicense()
         m_sAuthorization.GetString()
     );
 
-    if (success) {
+    if (!success) {
+        MessageBoxL("保存授权信息失败!", "错误", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    // 询问是否导出文件
+    if (MessageBoxL("授权已保存到数据库。\n\n是否同时导出为文件？\n导出后可发送给目标设备导入使用。",
+                    "导出授权", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+
+        // 构建默认文件名
+        CString defaultName;
+        defaultName.Format(_T("YAMA_%s.lic"), m_sDeviceID.Left(9).GetString());
+
+        // 弹出文件保存对话框
+        CString filter = _T("YAMA License (*.lic)|*.lic|All Files (*.*)|*.*||");
+        CString dlgTitle = _TR("保存授权文件");
+
+        CFileDialog dlg(FALSE, _T("lic"), defaultName,
+            OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY, filter, this);
+        dlg.m_ofn.lpstrTitle = dlgTitle;
+
+        if (dlg.DoModal() == IDOK) {
+            // 导出文件
+            if (ExportLicenseFile(
+                    std::string(CT2A(dlg.GetPathName().GetString())),
+                    std::string(CT2A(m_sDeviceID.GetString())),
+                    std::string(CT2A(m_sPassword.GetString())),
+                    std::string(CT2A(m_sHMAC.GetString())),
+                    std::string(CT2A(m_sAuthorization.GetString())))) {
+                CString msg;
+                msg.Format(_T("%s\n%s"), _TR("授权文件已导出到："), dlg.GetPathName().GetString());
+                MessageBox(msg, _TR("导出成功"), MB_OK | MB_ICONINFORMATION);
+            } else {
+                MessageBoxL("无法写入文件", "导出失败", MB_OK | MB_ICONERROR);
+            }
+        }
+    } else {
+        // 只保存到数据库，显示成功信息
         CString msg;
         if (m_sAuthorization.IsEmpty()) {
             msg.FormatL("授权信息已保存!\n\n序列号: %s\n口令: %s\nHMAC: %s\n\n存储位置: %s",
@@ -937,7 +975,5 @@ void CPwdGenDlg::OnBnClickedButtonSaveLicense()
                        m_sDeviceID, m_sPassword, m_sHMAC, m_sAuthorization, GetLicensesPath().c_str());
         }
         MessageBox(msg, _TR("保存成功"), MB_OK | MB_ICONINFORMATION);
-    } else {
-        MessageBoxL("保存授权信息失败!", "错误", MB_OK | MB_ICONERROR);
     }
 }
