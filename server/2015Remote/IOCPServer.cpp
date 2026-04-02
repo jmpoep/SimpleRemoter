@@ -649,6 +649,18 @@ DWORD IOCPServer::WorkThreadProc(LPVOID lParam)
 //在工作线程中被调用
 BOOL IOCPServer::HandleIO(IOType PacketFlags,PCONTEXT_OBJECT ContextObject, DWORD dwTrans, ZSTD_DCtx* ctx, z_stream* z)
 {
+    // 防止竞态条件 (#215)：
+    // 必须先增加引用计数，再检查 IsRemoved。
+    // 顺序很重要！如果先检查再增加，会有 TOCTOU 竞态窗口：
+    // 在检查和增加之间，RemoveStaleContext 可能完成并重用对象。
+    ContextObject->IoRefCount.fetch_add(1);
+
+    // 检查对象是否已被标记为移除
+    if (ContextObject->IsRemoved.load()) {
+        ContextObject->IoRefCount.fetch_sub(1);
+        return FALSE;
+    }
+
     BOOL bRet = FALSE;
 
     switch (PacketFlags) {
@@ -668,7 +680,14 @@ BOOL IOCPServer::HandleIO(IOType PacketFlags,PCONTEXT_OBJECT ContextObject, DWOR
         break;
     }
 
-    return bRet;
+    // 减少引用计数 (#215)
+    // 特殊返回值 -2 表示内部函数已经减少了引用计数并调用了 RemoveStaleContext
+    // 此时对象可能已在空闲池或被重用，不能再访问
+    if (bRet != -2) {
+        ContextObject->IoRefCount.fetch_sub(1);
+    }
+
+    return bRet == -2 ? FALSE : bRet;
 }
 
 
@@ -777,8 +796,11 @@ BOOL ParseReceivedData(CONTEXT_OBJECT * ContextObject, DWORD dwTrans, pfnNotifyP
 BOOL IOCPServer::OnClientReceiving(PCONTEXT_OBJECT  ContextObject, DWORD dwTrans, ZSTD_DCtx* ctx, z_stream* z)
 {
     if (FALSE == ParseReceivedData(ContextObject, dwTrans, m_NotifyProc, ctx, z)) {
+        // 先减少引用计数，再调用 RemoveStaleContext (#215)
+        // RemoveStaleContext 完成后对象会被移到空闲池，不能再访问
+        ContextObject->IoRefCount.fetch_sub(1);
         RemoveStaleContext(ContextObject);
-        return FALSE;
+        return -2;  // 特殊返回值：告诉 HandleIO 不要再减少引用计数
     }
 
     PostRecv(ContextObject); //投递新的接收数据的请求
@@ -880,10 +902,12 @@ BOOL IOCPServer::OnClientPostSending(CONTEXT_OBJECT* ContextObject,ULONG ulCompl
             int iOk = WSASend(ContextObject->sClientSocket, &ContextObject->wsaOutBuffer,1,
                               NULL, ulFlags,&OverlappedPlus->m_ol, NULL);
             if ( iOk == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING ) {
+                // 先减少引用计数，再调用 RemoveStaleContext (#215)
+                ContextObject->IoRefCount.fetch_sub(1);
                 if (RemoveStaleContext(ContextObject))
                     Mprintf("!!! OnClientPostSending 投递消息失败: %d\n", WSAGetLastError());
                 SAFE_DELETE(OverlappedPlus);
-                return FALSE;
+                return -2;  // 特殊返回值：告诉 HandleIO 不要再减少引用计数
             }
             return TRUE;
         }
@@ -1087,14 +1111,27 @@ BOOL IOCPServer::RemoveStaleContext(CONTEXT_OBJECT* ContextObject)
     auto find = m_ContextConnectionList.Find(ContextObject);
     LeaveCriticalSection(&m_cs);
     if (find) {  //在内存中查找该用户的上下文数据结构
+        // 标记对象为已移除，防止新的 I/O 处理开始 (#215)
+        ContextObject->IsRemoved.store(true);
+
         m_OfflineProc(ContextObject);
 
         CancelIo((HANDLE)ContextObject->sClientSocket);  //取消在当前套接字的异步IO -->PostRecv
         closesocket(ContextObject->sClientSocket);      //关闭套接字
         ContextObject->sClientSocket = INVALID_SOCKET;
 
-        while (!HasOverlappedIoCompleted((LPOVERLAPPED)ContextObject)) { //判断还有没有异步IO请求在当前套接字上
-            Sleep(0);
+        // 等待所有正在处理此对象的工作线程完成 (#215)
+        // 注意：之前的 HasOverlappedIoCompleted((LPOVERLAPPED)ContextObject) 是错误的，
+        // 因为 CONTEXT_OBJECT 不是 OVERLAPPED，其第一个字段是虚函数表指针，
+        // 导致检查总是立即返回 TRUE，造成竞态条件崩溃
+        int waitCount = 0;
+        while (ContextObject->IoRefCount.load() > 0) {
+            Sleep(1);
+            if (++waitCount > 5000) {  // 5秒超时保护
+                Mprintf("!!! RemoveStaleContext: IoRefCount wait timeout (ref=%d)\n",
+                        ContextObject->IoRefCount.load());
+                break;
+            }
         }
 
         MoveContextToFreePoolList(ContextObject);  //将该内存结构回收至内存池

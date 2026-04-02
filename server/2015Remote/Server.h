@@ -10,6 +10,7 @@
 #include "common/xxhash.h"
 #include <WS2tcpip.h>
 #include <common/ikcp.h>
+#include <atomic>
 
 #define PACKET_LENGTH   0x2000
 
@@ -373,6 +374,10 @@ public:
     time_t              OnlineTime = 0;             // 上线时间
     time_t              LastHeartbeatTime = 0;      // 最后心跳时间
 
+    // 引用计数：跟踪正在处理此对象的工作线程数量，防止竞态条件 (#215)
+    std::atomic<int>    IoRefCount{0};              // I/O 处理引用计数
+    std::atomic<bool>   IsRemoved{false};           // 标记是否已被标记为移除
+
     // 预分配的解压缩缓冲区，避免频繁内存分配
     PBYTE               DecompressBuffer = nullptr;
     ULONG               DecompressBufferSize = 0;
@@ -500,6 +505,11 @@ public:
         LastHeartbeatTime = OnlineTime;
         GroupName.clear();
         ID = 0;
+        // 重置引用计数和移除标志 (#215)
+        // 顺序重要：先确保 IsRemoved=false（允许新的 I/O 处理），再重置 IoRefCount
+        // 注意：到达这里时，RemoveStaleContext 应该已经等待 IoRefCount==0
+        IsRemoved.store(false, std::memory_order_release);
+        IoRefCount.store(0, std::memory_order_release);
     }
     uint64_t GetAliveTime()const
     {
